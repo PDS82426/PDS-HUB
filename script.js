@@ -5,17 +5,13 @@
 
 const SUPABASE_URL = "https://zvwghoabsqfyakbqzhil.supabase.co";
 
-const SUPABASE_ANON_KEY = "sb_publishable_oJ3Zc3TplfYgePQEmTrJ8Q_qycxR0jQ";
+const SUPABASE_ANON_KEY =
+    "sb_publishable_oJ3Zc3TplfYgePQEmTrJ8Q_qycxR0jQ";
 
 const db = window.supabase.createClient(
     SUPABASE_URL,
     SUPABASE_ANON_KEY
 );
-
-
-/* =========================================================
-   GLOBAL STATE
-========================================================= */
 
 let currentUser = null;
 let currentProfile = null;
@@ -77,34 +73,115 @@ function authMessage(elementId, message, success = false) {
 ========================================================= */
 
 async function registerUser(event) {
-
     event.preventDefault();
 
-    const name =
-        document.getElementById("registerName").value.trim();
-
-    const position =
-        document.getElementById("registerPosition").value.trim();
-
-    const email =
-        document.getElementById("registerEmail").value.trim();
-
-    const password =
-        document.getElementById("registerPassword").value;
-
-    const confirm =
-        document.getElementById("registerConfirm").value;
-
+    const name = document.getElementById("registerName").value.trim();
+    const position = document.getElementById("registerPosition").value.trim();
+    const email = document.getElementById("registerEmail").value.trim();
+    const password = document.getElementById("registerPassword").value;
+    const confirm = document.getElementById("registerConfirm").value;
 
     if (password !== confirm) {
-
         authMessage(
             "registerMessage",
             "Passwords do not match."
         );
-
         return;
     }
+
+    if (password.length < 6) {
+        authMessage(
+            "registerMessage",
+            "Password must be at least 6 characters."
+        );
+        return;
+    }
+
+    const button = document.querySelector(
+        "#registerForm button[type='submit']"
+    );
+
+    button.disabled = true;
+    button.textContent = "Creating...";
+
+    authMessage(
+        "registerMessage",
+        "Connecting to Supabase..."
+    );
+
+    try {
+        console.log("Starting Supabase signup...");
+        console.log("Supabase URL:", SUPABASE_URL);
+
+        const { data, error } = await db.auth.signUp({
+            email: email,
+            password: password,
+            options: {
+                data: {
+                    full_name: name,
+                    position: position
+                },
+                emailRedirectTo:
+                    "https://christinedpwh2024-blip.github.io/PDS-HUB/"
+            }
+        });
+
+        console.log("Signup response:", data);
+        console.log("Signup error:", error);
+
+        if (error) {
+            throw error;
+        }
+
+        if (!data.user) {
+            throw new Error(
+                "Supabase did not return a user."
+            );
+        }
+
+        if (data.session) {
+            await createProfile(
+                data.user,
+                name,
+                position
+            );
+        }
+
+        document
+            .getElementById("registerForm")
+            .reset();
+
+        authMessage(
+            "registerMessage",
+            data.session
+                ? "Account created successfully! You can now sign in."
+                : "Account created. Please check your email to confirm your account.",
+            true
+        );
+
+        setTimeout(() => {
+            showLogin();
+        }, 2000);
+
+    } catch (error) {
+
+        console.error(
+            "SIGNUP ERROR:",
+            error
+        );
+
+        authMessage(
+            "registerMessage",
+            "Account creation failed: " +
+            (error.message || error)
+        );
+
+    } finally {
+
+        button.disabled = false;
+        button.textContent = "Create Account";
+    }
+}
 
 
     authMessage(
