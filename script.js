@@ -13,6 +13,9 @@ const db = window.supabase.createClient(
     SUPABASE_ANON_KEY
 );
 
+console.log("PDS HUB SCRIPT LOADED");
+console.log("Supabase client:", db);
+
 let currentUser = null;
 let currentProfile = null;
 let modalMode = "project";
