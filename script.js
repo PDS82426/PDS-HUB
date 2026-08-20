@@ -1,119 +1,969 @@
 /* =========================================================
-   PDS HUB
-   GitHub Pages Version
-   No Supabase required
+   PDS HUB — SUPABASE VERSION
+   GitHub Pages + Supabase
    ========================================================= */
 
+/* =========================================================
+   SUPABASE CONFIGURATION
+   ========================================================= */
 
-/* PAGE NAVIGATION */
+const SUPABASE_URL = "YOUR_SUPABASE_PROJECT_URL";
+const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
+
+const supabaseClient = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY
+);
+
+
+/* =========================================================
+   GLOBAL VARIABLES
+   ========================================================= */
+
+let currentUser = null;
+let currentProfile = null;
+
+
+/* =========================================================
+   INITIALIZATION
+   ========================================================= */
+
+document.addEventListener("DOMContentLoaded", async () => {
+
+    showPage("overview");
+
+    await checkUser();
+
+    setupNavigation();
+    setupSearch();
+    setupKeyboardShortcuts();
+
+});
+
+
+/* =========================================================
+   AUTHENTICATION
+   ========================================================= */
+
+async function checkUser() {
+
+    const {
+        data: { user },
+        error
+    } = await supabaseClient.auth.getUser();
+
+    if (error) {
+        console.error("Auth error:", error);
+        return;
+    }
+
+    currentUser = user;
+
+    if (!currentUser) {
+
+        console.log("No user logged in.");
+
+        showLoginState();
+
+        return;
+    }
+
+    console.log("Logged in:", currentUser.email);
+
+    await loadProfile();
+    await loadDashboard();
+    await loadProjects();
+    await loadDocuments();
+
+}
+
+
+/* =========================================================
+   LOAD PROFILE
+   ========================================================= */
+
+async function loadProfile() {
+
+    if (!currentUser) return;
+
+    const { data, error } = await supabaseClient
+        .from("profiles")
+        .select("*")
+        .eq("id", currentUser.id)
+        .maybeSingle();
+
+    if (error) {
+
+        console.error("Profile error:", error);
+
+        return;
+    }
+
+    currentProfile = data;
+
+    updateProfileUI();
+
+}
+
+
+/* =========================================================
+   UPDATE PROFILE UI
+   ========================================================= */
+
+function updateProfileUI() {
+
+    if (!currentUser) return;
+
+    const name =
+        currentProfile?.full_name ||
+        currentUser.email?.split("@")[0] ||
+        "User";
+
+    const initials =
+        name
+            .split(" ")
+            .map(word => word.charAt(0))
+            .join("")
+            .substring(0, 2)
+            .toUpperCase();
+
+    document.querySelectorAll(".profile-name").forEach(el => {
+        el.textContent = name;
+    });
+
+    document.querySelectorAll(".profile-email").forEach(el => {
+        el.textContent = currentUser.email || "";
+    });
+
+    document.querySelectorAll(".avatar").forEach(el => {
+        el.textContent = initials;
+    });
+
+    document.querySelectorAll(".top-avatar").forEach(el => {
+        el.textContent = initials;
+    });
+
+}
+
+
+/* =========================================================
+   DASHBOARD
+   ========================================================= */
+
+async function loadDashboard() {
+
+    if (!currentUser) return;
+
+    const { data: projects, error } = await supabaseClient
+        .from("projects")
+        .select("*")
+        .eq("owner_id", currentUser.id);
+
+    if (error) {
+
+        console.error("Projects error:", error);
+
+        return;
+    }
+
+    const { data: documents, error: documentError } =
+        await supabaseClient
+            .from("documents")
+            .select("*")
+            .eq("owner_id", currentUser.id);
+
+    if (documentError) {
+
+        console.error("Documents error:", documentError);
+
+        return;
+    }
+
+    const totalProjects = projects?.length || 0;
+    const totalDocuments = documents?.length || 0;
+
+    const ongoing =
+        projects?.filter(p =>
+            ["Ongoing", "In Progress"].includes(p.status)
+        ).length || 0;
+
+    const completed =
+        projects?.filter(p =>
+            p.status === "Completed"
+        ).length || 0;
+
+    updateStat("totalProjects", totalProjects);
+    updateStat("totalDocuments", totalDocuments);
+    updateStat("ongoingProjects", ongoing);
+    updateStat("completedProjects", completed);
+
+}
+
+
+/* =========================================================
+   UPDATE STAT
+   ========================================================= */
+
+function updateStat(id, value) {
+
+    const element = document.getElementById(id);
+
+    if (element) {
+        element.textContent = value;
+    }
+
+}
+
+
+/* =========================================================
+   PROJECTS
+   ========================================================= */
+
+async function loadProjects() {
+
+    if (!currentUser) return;
+
+    const { data, error } = await supabaseClient
+        .from("projects")
+        .select("*")
+        .eq("owner_id", currentUser.id)
+        .order("created_at", { ascending: false });
+
+    if (error) {
+
+        console.error("Project loading error:", error);
+
+        return;
+    }
+
+    renderProjects(data || []);
+
+}
+
+
+/* =========================================================
+   RENDER PROJECTS
+   ========================================================= */
+
+function renderProjects(projects) {
+
+    const container =
+        document.getElementById("projectList");
+
+    if (!container) return;
+
+    if (!projects.length) {
+
+        container.innerHTML = `
+            <div class="empty-card">
+                <div class="empty-icon">+</div>
+
+                <h2>No projects yet</h2>
+
+                <p>
+                    Create your first project to start monitoring.
+                </p>
+
+                <button
+                    class="button primary"
+                    onclick="openProjectModal()">
+                    + New Project
+                </button>
+            </div>
+        `;
+
+        return;
+    }
+
+    container.innerHTML = projects.map(project => {
+
+        const progress =
+            getProjectProgress(project.status);
+
+        return `
+            <div class="project-row">
+
+                <div>
+                    <strong>${escapeHTML(project.name)}</strong>
+                    <small>
+                        ${escapeHTML(project.project_code || "")}
+                    </small>
+                </div>
+
+                <div>
+                    ${escapeHTML(project.location || "—")}
+                </div>
+
+                <div>
+                    <span class="status ${getStatusClass(project.status)}">
+                        ${escapeHTML(project.status)}
+                    </span>
+                </div>
+
+                <div>
+                    <div class="progress">
+                        <div style="width:${progress}%"></div>
+                    </div>
+                </div>
+
+                <div>
+                    <button onclick="viewProject('${project.id}')">
+                        View
+                    </button>
+                </div>
+
+            </div>
+        `;
+
+    }).join("");
+
+}
+
+
+/* =========================================================
+   PROJECT PROGRESS
+   ========================================================= */
+
+function getProjectProgress(status) {
+
+    switch (status) {
+
+        case "Planning":
+            return 10;
+
+        case "Ongoing":
+            return 50;
+
+        case "In Progress":
+            return 50;
+
+        case "Completed":
+            return 100;
+
+        case "On Hold":
+            return 25;
+
+        default:
+            return 0;
+
+    }
+
+}
+
+
+/* =========================================================
+   STATUS CLASS
+   ========================================================= */
+
+function getStatusClass(status) {
+
+    switch (status) {
+
+        case "Completed":
+            return "completed";
+
+        case "Ongoing":
+        case "In Progress":
+            return "ongoing";
+
+        case "On Hold":
+            return "review";
+
+        case "Planning":
+            return "upcoming";
+
+        default:
+            return "";
+
+    }
+
+}
+
+
+/* =========================================================
+   CREATE PROJECT
+   ========================================================= */
+
+async function createProject(event) {
+
+    event.preventDefault();
+
+    if (!currentUser) {
+
+        alert("Please sign in first.");
+
+        return;
+    }
+
+    const name =
+        document.getElementById("projectName")?.value.trim();
+
+    const code =
+        document.getElementById("projectCode")?.value.trim();
+
+    const location =
+        document.getElementById("projectLocation")?.value.trim();
+
+    const status =
+        document.getElementById("projectStatus")?.value ||
+        "Planning";
+
+    const targetDate =
+        document.getElementById("projectTargetDate")?.value ||
+        null;
+
+    const notes =
+        document.getElementById("projectNotes")?.value.trim();
+
+    if (!name) {
+
+        alert("Please enter a project name.");
+
+        return;
+    }
+
+    const { data, error } = await supabaseClient
+        .from("projects")
+        .insert({
+
+            owner_id: currentUser.id,
+
+            project_code: code || null,
+
+            name: name,
+
+            location: location || null,
+
+            status: status,
+
+            target_date: targetDate,
+
+            notes: notes || null
+
+        })
+        .select()
+        .single();
+
+    if (error) {
+
+        console.error(error);
+
+        alert(
+            "Unable to create project.\n\n" +
+            error.message
+        );
+
+        return;
+    }
+
+    alert("Project created successfully.");
+
+    closeModal();
+
+    await loadProjects();
+    await loadDashboard();
+
+}
+
+
+/* =========================================================
+   DOCUMENTS
+   ========================================================= */
+
+async function loadDocuments() {
+
+    if (!currentUser) return;
+
+    const { data, error } = await supabaseClient
+        .from("documents")
+        .select("*")
+        .eq("owner_id", currentUser.id)
+        .order("created_at", { ascending: false });
+
+    if (error) {
+
+        console.error("Documents error:", error);
+
+        return;
+    }
+
+    renderDocuments(data || []);
+
+}
+
+
+/* =========================================================
+   RENDER DOCUMENTS
+   ========================================================= */
+
+function renderDocuments(documents) {
+
+    const container =
+        document.getElementById("documentList");
+
+    if (!container) return;
+
+    if (!documents.length) {
+
+        container.innerHTML = `
+            <div class="empty-card">
+
+                <div class="empty-icon">
+                    📁
+                </div>
+
+                <h2>No documents yet</h2>
+
+                <p>
+                    Upload project documents to your library.
+                </p>
+
+                <button
+                    class="button primary"
+                    onclick="openUploadModal()">
+                    Upload Document
+                </button>
+
+            </div>
+        `;
+
+        return;
+    }
+
+    container.innerHTML = documents.map(document => {
+
+        const type =
+            getFileType(document.file_name);
+
+        return `
+            <div class="library-item"
+                 data-type="${type}">
+
+                <div class="library-icon">
+                    ${type.toUpperCase()}
+                </div>
+
+                <div>
+
+                    <strong>
+                        ${escapeHTML(document.title)}
+                    </strong>
+
+                    <span>
+                        ${escapeHTML(document.file_name)}
+                    </span>
+
+                </div>
+
+                <button
+                    onclick="openDocument('${document.file_path}')">
+                    Open
+                </button>
+
+            </div>
+        `;
+
+    }).join("");
+
+}
+
+
+/* =========================================================
+   FILE TYPE
+   ========================================================= */
+
+function getFileType(filename) {
+
+    if (!filename) return "other";
+
+    const extension =
+        filename.split(".").pop().toLowerCase();
+
+    if (extension === "pdf")
+        return "pdf";
+
+    if (
+        extension === "xlsx" ||
+        extension === "xls" ||
+        extension === "csv"
+    )
+        return "excel";
+
+    if (
+        extension === "doc" ||
+        extension === "docx"
+    )
+        return "word";
+
+    return "other";
+
+}
+
+
+/* =========================================================
+   OPEN DOCUMENT
+   ========================================================= */
+
+async function openDocument(path) {
+
+    if (!path) {
+
+        alert("File path is missing.");
+
+        return;
+    }
+
+    const { data, error } =
+        await supabaseClient.storage
+            .from("documents")
+            .createSignedUrl(path, 3600);
+
+    if (error) {
+
+        console.error(error);
+
+        alert(
+            "Unable to open document.\n\n" +
+            error.message
+        );
+
+        return;
+    }
+
+    window.open(
+        data.signedUrl,
+        "_blank"
+    );
+
+}
+
+
+/* =========================================================
+   UPLOAD DOCUMENT
+   ========================================================= */
+
+async function uploadDocument(event) {
+
+    event.preventDefault();
+
+    if (!currentUser) {
+
+        alert("Please sign in first.");
+
+        return;
+    }
+
+    const file =
+        document.getElementById("documentFile")?.files[0];
+
+    const title =
+        document.getElementById("documentTitle")?.value.trim();
+
+    const projectName =
+        document.getElementById("documentProject")?.value.trim();
+
+    if (!file) {
+
+        alert("Please select a file.");
+
+        return;
+    }
+
+    if (!title) {
+
+        alert("Please enter a document title.");
+
+        return;
+    }
+
+    const safeName =
+        file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+
+    const filePath =
+        `${currentUser.id}/${Date.now()}_${safeName}`;
+
+    const { error: uploadError } =
+        await supabaseClient.storage
+            .from("documents")
+            .upload(filePath, file);
+
+    if (uploadError) {
+
+        console.error(uploadError);
+
+        alert(
+            "Upload failed.\n\n" +
+            uploadError.message
+        );
+
+        return;
+    }
+
+    const { error: databaseError } =
+        await supabaseClient
+            .from("documents")
+            .insert({
+
+                owner_id: currentUser.id,
+
+                title: title,
+
+                project_name:
+                    projectName || null,
+
+                file_name:
+                    file.name,
+
+                file_path:
+                    filePath,
+
+                mime_type:
+                    file.type || null,
+
+                size_bytes:
+                    file.size
+
+            });
+
+    if (databaseError) {
+
+        console.error(databaseError);
+
+        alert(
+            "File uploaded, but database record failed.\n\n" +
+            databaseError.message
+        );
+
+        return;
+    }
+
+    alert("Document uploaded successfully.");
+
+    closeModal();
+
+    await loadDocuments();
+    await loadDashboard();
+
+}
+
+
+/* =========================================================
+   VIEW PROJECT
+   ========================================================= */
+
+async function viewProject(id) {
+
+    const { data, error } =
+        await supabaseClient
+            .from("projects")
+            .select("*")
+            .eq("id", id)
+            .single();
+
+    if (error) {
+
+        alert(error.message);
+
+        return;
+    }
+
+    alert(
+        "PROJECT\n\n" +
+
+        "Name: " +
+        data.name +
+
+        "\nCode: " +
+        (data.project_code || "—") +
+
+        "\nLocation: " +
+        (data.location || "—") +
+
+        "\nStatus: " +
+        data.status +
+
+        "\nTarget Date: " +
+        (data.target_date || "—") +
+
+        "\n\nNotes:\n" +
+        (data.notes || "—")
+    );
+
+}
+
+
+/* =========================================================
+   DELETE PROJECT
+   ========================================================= */
+
+async function deleteProject(id) {
+
+    if (!confirm(
+        "Are you sure you want to delete this project?"
+    )) {
+        return;
+    }
+
+    const { error } =
+        await supabaseClient
+            .from("projects")
+            .delete()
+            .eq("id", id);
+
+    if (error) {
+
+        alert(error.message);
+
+        return;
+    }
+
+    await loadProjects();
+    await loadDashboard();
+
+}
+
+
+/* =========================================================
+   PAGE NAVIGATION
+   ========================================================= */
 
 function showPage(pageId) {
 
-    const pages = document.querySelectorAll(".page");
-    const navItems = document.querySelectorAll(".nav-item");
+    document.querySelectorAll(".page")
+        .forEach(page => {
 
-    pages.forEach(page => {
-        page.classList.remove("active-page");
-    });
+            page.classList.remove("active-page");
 
-    const selectedPage = document.getElementById(pageId);
+        });
 
-    if (selectedPage) {
-        selectedPage.classList.add("active-page");
+    const page =
+        document.getElementById(pageId);
+
+    if (page) {
+
+        page.classList.add("active-page");
+
     }
 
-    navItems.forEach(item => {
+    document.querySelectorAll(".nav-item")
+        .forEach(item => {
 
-        item.classList.remove("active");
+            item.classList.toggle(
+                "active",
+                item.dataset.page === pageId
+            );
 
-        if (item.dataset.page === pageId) {
-            item.classList.add("active");
-        }
-
-    });
+        });
 
     window.scrollTo({
         top: 0,
         behavior: "smooth"
     });
+
 }
 
 
-/* SIDEBAR LINKS */
+/* =========================================================
+   NAVIGATION
+   ========================================================= */
 
-document.querySelectorAll(".nav-item").forEach(item => {
+function setupNavigation() {
 
-    item.addEventListener("click", function(event) {
+    document.querySelectorAll(".nav-item")
+        .forEach(item => {
 
-        event.preventDefault();
+            item.addEventListener("click", event => {
 
-        const page = this.dataset.page;
+                event.preventDefault();
 
-        if (page) {
-            showPage(page);
-        }
+                const page =
+                    item.dataset.page;
 
-    });
+                if (page) {
 
-});
+                    showPage(page);
 
+                }
 
-/* GLOBAL SEARCH */
-
-const globalSearch = document.getElementById("globalSearch");
-
-if (globalSearch) {
-
-    globalSearch.addEventListener("input", function() {
-
-        const search = this.value.toLowerCase().trim();
-
-        if (!search) {
-            return;
-        }
-
-        const pages = document.querySelectorAll(".page");
-
-        pages.forEach(page => {
-
-            const text = page.innerText.toLowerCase();
-
-            if (text.includes(search)) {
-
-                const id = page.id;
-
-                showPage(id);
-
-            }
+            });
 
         });
 
+}
+
+
+/* =========================================================
+   SEARCH
+   ========================================================= */
+
+function setupSearch() {
+
+    const search =
+        document.getElementById("globalSearch");
+
+    if (!search) return;
+
+    search.addEventListener("input", function () {
+
+        const value =
+            this.value.toLowerCase().trim();
+
+        if (!value) return;
+
+        document.querySelectorAll(".page")
+            .forEach(page => {
+
+                if (
+                    page.innerText
+                        .toLowerCase()
+                        .includes(value)
+                ) {
+
+                    showPage(page.id);
+
+                }
+
+            });
+
     });
 
 }
 
 
-/* CTRL + K / COMMAND + K */
+/* =========================================================
+   CTRL + K
+   ========================================================= */
 
-document.addEventListener("keydown", function(event) {
+function setupKeyboardShortcuts() {
 
-    if (
-        (event.ctrlKey || event.metaKey) &&
-        event.key.toLowerCase() === "k"
-    ) {
+    document.addEventListener("keydown", event => {
 
-        event.preventDefault();
+        if (
+            (event.ctrlKey || event.metaKey) &&
+            event.key.toLowerCase() === "k"
+        ) {
 
-        focusSearch();
+            event.preventDefault();
 
-    }
+            focusSearch();
 
-});
+        }
+
+        if (event.key === "Escape") {
+
+            closeModal();
+
+        }
+
+    });
+
+}
 
 
 function focusSearch() {
 
-    const search = document.getElementById("globalSearch");
+    const search =
+        document.getElementById("globalSearch");
 
     if (search) {
 
@@ -126,39 +976,85 @@ function focusSearch() {
 }
 
 
-/* MODAL */
+/* =========================================================
+   MODAL
+   ========================================================= */
 
-const modal = document.getElementById("modal");
+function openModal(
+    title,
+    description,
+    inputPlaceholder
+) {
 
-function openModal(title, description, inputPlaceholder) {
+    const modal =
+        document.getElementById("modal");
 
-    document.getElementById("modalTitle").textContent = title;
+    if (!modal) return;
 
-    document.getElementById("modalDescription").textContent = description;
+    const titleElement =
+        document.getElementById("modalTitle");
 
-    document.getElementById("modalInput").placeholder =
-        inputPlaceholder || "";
+    const descriptionElement =
+        document.getElementById("modalDescription");
+
+    const input =
+        document.getElementById("modalInput");
+
+    if (titleElement)
+        titleElement.textContent = title;
+
+    if (descriptionElement)
+        descriptionElement.textContent = description;
+
+    if (input) {
+
+        input.placeholder =
+            inputPlaceholder || "";
+
+        input.focus();
+
+    }
 
     modal.classList.add("open");
 
-    document.getElementById("modalInput").focus();
-
 }
 
+
+/* =========================================================
+   CLOSE MODAL
+   ========================================================= */
 
 function closeModal() {
 
-    modal.classList.remove("open");
+    const modal =
+        document.getElementById("modal");
 
-    document.getElementById("modalForm").reset();
+    if (modal) {
+
+        modal.classList.remove("open");
+
+    }
+
+    const form =
+        document.getElementById("modalForm");
+
+    if (form) {
+
+        form.reset();
+
+    }
 
 }
 
+
+/* =========================================================
+   MODAL ACTIONS
+   ========================================================= */
 
 function openUpdateModal() {
 
     openModal(
-        "New update",
+        "New Update",
         "Add an update to your PDS Hub workspace.",
         "Update title"
     );
@@ -169,7 +1065,7 @@ function openUpdateModal() {
 function openProjectModal() {
 
     openModal(
-        "New project",
+        "New Project",
         "Create a new project for monitoring.",
         "Project name"
     );
@@ -180,7 +1076,7 @@ function openProjectModal() {
 function openUploadModal() {
 
     openModal(
-        "Upload document",
+        "Upload Document",
         "Add a document to your PDS Hub library.",
         "Document name"
     );
@@ -188,40 +1084,9 @@ function openUploadModal() {
 }
 
 
-function handleModalSubmit(event) {
-
-    event.preventDefault();
-
-    const title = document.getElementById("modalInput").value;
-
-    if (!title.trim()) {
-        return;
-    }
-
-    alert(
-        "Saved successfully!\n\n" +
-        title +
-        "\n\nThis GitHub Pages version stores the interface locally. " +
-        "A real shared database can be connected later."
-    );
-
-    closeModal();
-
-}
-
-
-/* CLOSE MODAL WITH ESC */
-
-document.addEventListener("keydown", function(event) {
-
-    if (event.key === "Escape") {
-        closeModal();
-    }
-
-});
-
-
-/* LIBRARY SEARCH */
+/* =========================================================
+   LIBRARY FILTER
+   ========================================================= */
 
 function filterLibrary() {
 
@@ -232,68 +1097,68 @@ function filterLibrary() {
         document.getElementById("fileTypeFilter");
 
     const search =
-        searchInput.value.toLowerCase().trim();
+        searchInput
+            ? searchInput.value.toLowerCase().trim()
+            : "";
 
     const type =
-        typeFilter.value;
+        typeFilter
+            ? typeFilter.value
+            : "all";
 
-    const items =
-        document.querySelectorAll(".library-item");
+    document.querySelectorAll(".library-item")
+        .forEach(item => {
 
-    items.forEach(item => {
+            const text =
+                item.innerText.toLowerCase();
 
-        const text =
-            item.innerText.toLowerCase();
+            const itemType =
+                item.dataset.type;
 
-        const itemType =
-            item.dataset.type;
+            const matchesSearch =
+                text.includes(search);
 
-        const matchesSearch =
-            text.includes(search);
+            const matchesType =
+                type === "all" ||
+                itemType === type;
 
-        const matchesType =
-            type === "all" ||
-            itemType === type;
+            item.style.display =
+                matchesSearch && matchesType
+                    ? "flex"
+                    : "none";
 
-        if (matchesSearch && matchesType) {
-
-            item.style.display = "flex";
-
-        } else {
-
-            item.style.display = "none";
-
-        }
-
-    });
+        });
 
 }
 
 
-/* FILE OPEN PLACEHOLDER */
+/* =========================================================
+   LOGIN STATE
+   ========================================================= */
 
-document.addEventListener("click", function(event) {
+function showLoginState() {
 
-    if (
-        event.target.tagName === "BUTTON" &&
-        event.target.textContent.trim() === "Open"
-    ) {
+    console.log(
+        "PDS Hub requires authentication."
+    );
 
-        alert(
-            "Document preview is ready to be connected.\n\n" +
-            "For GitHub Pages, PDF and Excel files can be stored " +
-            "inside your repository and linked here."
-        );
-
-    }
-
-});
+}
 
 
-/* INITIALIZE */
+/* =========================================================
+   ESCAPE HTML
+   ========================================================= */
 
-document.addEventListener("DOMContentLoaded", function() {
+function escapeHTML(value) {
 
-    showPage("overview");
+    if (value === null || value === undefined)
+        return "";
 
-});
+    return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+
+}
