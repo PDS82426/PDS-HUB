@@ -3,10 +3,10 @@
    Supabase + GitHub Pages
    ========================================================= */
 
-const SUPABASE_URL = "https://zvwghoabsqfyakbqzhil.supabase.co";
+cconst SUPABASE_URL = "https://zvwghoabsqfyakbqzhil.supabase.co";
 
 const SUPABASE_ANON_KEY =
-    "sb_publishable_oJ3Zc3TplfYgePQEmTrJ8Q_qycxR0jQ";
+    "YOUR_ACTUAL_PUBLISHABLE_KEY";
 
 const db = window.supabase.createClient(
     SUPABASE_URL,
