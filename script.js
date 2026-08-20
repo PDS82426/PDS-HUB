@@ -106,28 +106,28 @@ async function registerUser(event) {
 
     authMessage(
         "registerMessage",
-        "Connecting to Supabase..."
+        "Creating account..."
     );
 
     try {
-        console.log("Starting Supabase signup...");
-        console.log("Supabase URL:", SUPABASE_URL);
 
         const { data, error } = await db.auth.signUp({
-    email: email,
-    password: password,
-    options: {
-        data: {
-            full_name: name,
-            position: position
-        },
-        emailRedirectTo:
-            "https://christinedpwh2024-blip.github.io/PDS-HUB/"
-    }
-});
+            email: email,
+            password: password,
 
-        console.log("Signup response:", data);
-        console.log("Signup error:", error);
+            options: {
+                data: {
+                    full_name: name,
+                    position: position
+                },
+
+                emailRedirectTo:
+                    "https://christinedpwh2024-blip.github.io/PDS-HUB/"
+            }
+        });
+
+        console.log("Supabase signup:", data);
+        console.log("Supabase error:", error);
 
         if (error) {
             throw error;
@@ -140,46 +140,54 @@ async function registerUser(event) {
         }
 
         if (data.session) {
+
             await createProfile(
                 data.user,
                 name,
                 position
             );
+
+            authMessage(
+                "registerMessage",
+                "Account created successfully! You can now sign in.",
+                true
+            );
+
+            document
+                .getElementById("registerForm")
+                .reset();
+
+        } else {
+
+            authMessage(
+                "registerMessage",
+                "Account created! Please check your email and click the confirmation link.",
+                true
+            );
+
+            document
+                .getElementById("registerForm")
+                .reset();
         }
-
-        document
-            .getElementById("registerForm")
-            .reset();
-
-        authMessage(
-            "registerMessage",
-            data.session
-                ? "Account created successfully! You can now sign in."
-                : "Account created. Please check your email to confirm your account.",
-            true
-        );
-
-        setTimeout(() => {
-            showLogin();
-        }, 2000);
 
     } catch (error) {
 
         console.error(
-            "SIGNUP ERROR:",
+            "CREATE ACCOUNT ERROR:",
             error
         );
 
         authMessage(
             "registerMessage",
-            "Account creation failed: " +
-            (error.message || error)
+            "Create account failed: " +
+            error.message
         );
 
     } finally {
 
         button.disabled = false;
         button.textContent = "Create Account";
+
     }
 }
 
