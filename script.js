@@ -1,824 +1,573 @@
 /* =========================================================
-   PDS HUB — SUPABASE VERSION
-   GitHub Pages + Supabase
+   PDS HUB
+   Supabase + GitHub Pages
+   Authentication
    ========================================================= */
 
-/* =========================================================
-   SUPABASE CONFIGURATION
-   ========================================================= */
+const SUPABASE_URL =
+    "https://zvwghoabsqfyakbqzhil.supabase.co";
 
-const SUPABASE_URL = "https://zvwghoabsqfyakbqzhil.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp2d2dob2Fic3FmeWFrYnF6aGlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcxODAxMDQsImV4cCI6MjEwMjc1NjEwNH0.GygaBIhjAOKBMfMl3W8hM3Iox2rSUs9FF-eW_PaSIY0";
+const SUPABASE_PUBLISHABLE_KEY =
+    "sb_publishable_oJ3Zc3TplfYgePQEmTrJ8Q_qycxR0jQ";
 
 const supabaseClient = window.supabase.createClient(
     SUPABASE_URL,
-    SUPABASE_ANON_KEY
+    SUPABASE_PUBLISHABLE_KEY
 );
 
 
 /* =========================================================
-   GLOBAL VARIABLES
+   AUTH STATE
    ========================================================= */
 
 let currentUser = null;
-let currentProfile = null;
 
 
 /* =========================================================
-   INITIALIZATION
+   CHECK LOGIN
    ========================================================= */
 
-document.addEventListener("DOMContentLoaded", async () => {
-
-    showPage("overview");
-
-    await checkUser();
-
-    setupNavigation();
-    setupSearch();
-    setupKeyboardShortcuts();
-
-});
-
-
-/* =========================================================
-   AUTHENTICATION
-   ========================================================= */
-
-async function checkUser() {
+async function checkAuth() {
 
     const {
-        data: { user },
+        data: { session },
         error
-    } = await supabaseClient.auth.getUser();
+    } = await supabaseClient.auth.getSession();
 
     if (error) {
         console.error("Auth error:", error);
         return;
     }
 
-    currentUser = user;
+    if (session) {
 
-    if (!currentUser) {
+        currentUser = session.user;
 
-        console.log("No user logged in.");
+        await loadUserProfile();
 
-        showLoginState();
+        showApplication();
+
+    } else {
+
+        showLogin();
+
+    }
+}
+
+
+/* =========================================================
+   AUTH STATE LISTENER
+   ========================================================= */
+
+supabaseClient.auth.onAuthStateChange(
+    async (event, session) => {
+
+        console.log("Auth event:", event);
+
+        if (session) {
+
+            currentUser = session.user;
+
+            await loadUserProfile();
+
+            showApplication();
+
+        } else {
+
+            currentUser = null;
+
+            showLogin();
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   SIGN UP
+   ========================================================= */
+
+async function signUp() {
+
+    const name =
+        document.getElementById("signupName")?.value.trim();
+
+    const email =
+        document.getElementById("signupEmail")?.value.trim();
+
+    const password =
+        document.getElementById("signupPassword")?.value;
+
+    const position =
+        document.getElementById("signupPosition")?.value.trim();
+
+
+    if (!name || !email || !password) {
+
+        alert(
+            "Please complete your name, email, and password."
+        );
 
         return;
+
     }
 
-    console.log("Logged in:", currentUser.email);
 
-    await loadProfile();
-    await loadDashboard();
-    await loadProjects();
-    await loadDocuments();
+    if (password.length < 6) {
+
+        alert(
+            "Password must contain at least 6 characters."
+        );
+
+        return;
+
+    }
+
+
+    const {
+        data,
+        error
+    } = await supabaseClient.auth.signUp({
+
+        email: email,
+
+        password: password,
+
+        options: {
+
+            data: {
+
+                full_name: name,
+
+                position: position
+
+            }
+
+        }
+
+    });
+
+
+    if (error) {
+
+        console.error(error);
+
+        alert(
+            "Create Account failed:\n\n" +
+            error.message
+        );
+
+        return;
+
+    }
+
+
+    /*
+       If email confirmation is enabled,
+       Supabase will require the user to
+       confirm their email first.
+    */
+
+    if (!data.session) {
+
+        alert(
+            "Account created successfully!\n\n" +
+            "Please check your email and confirm your account before signing in."
+        );
+
+        showLogin();
+
+        return;
+
+    }
+
+
+    currentUser = data.user;
+
+    await createProfile(
+        data.user,
+        name,
+        position
+    );
+
+    showApplication();
 
 }
 
 
 /* =========================================================
-   LOAD PROFILE
+   CREATE PROFILE
    ========================================================= */
 
-async function loadProfile() {
+async function createProfile(
+    user,
+    fullName,
+    position
+) {
+
+    if (!user) return;
+
+
+    const {
+        data: existing,
+        error: existingError
+    } = await supabaseClient
+        .from("profiles")
+        .select("id")
+        .eq("id", user.id)
+        .maybeSingle();
+
+
+    if (existingError) {
+
+        console.error(
+            "Profile check error:",
+            existingError
+        );
+
+        return;
+
+    }
+
+
+    if (existing) {
+
+        return;
+
+    }
+
+
+    const {
+        error
+    } = await supabaseClient
+        .from("profiles")
+        .insert({
+
+            id: user.id,
+
+            full_name:
+                fullName ||
+                user.email?.split("@")[0] ||
+                "PDS User",
+
+            position:
+                position || null,
+
+            role: "member"
+
+        });
+
+
+    if (error) {
+
+        console.error(
+            "Profile creation error:",
+            error
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   LOAD USER PROFILE
+   ========================================================= */
+
+async function loadUserProfile() {
 
     if (!currentUser) return;
 
-    const { data, error } = await supabaseClient
+
+    const {
+        data,
+        error
+    } = await supabaseClient
         .from("profiles")
-        .select("*")
+        .select(
+            "id, full_name, position, role"
+        )
         .eq("id", currentUser.id)
         .maybeSingle();
 
+
     if (error) {
 
-        console.error("Profile error:", error);
+        console.error(
+            "Profile loading error:",
+            error
+        );
 
         return;
+
     }
 
-    currentProfile = data;
 
-    updateProfileUI();
+    if (!data) {
+
+        await createProfile(
+            currentUser,
+            currentUser.user_metadata?.full_name,
+            currentUser.user_metadata?.position
+        );
+
+        return;
+
+    }
+
+
+    window.currentProfile = data;
+
+    updateUserInterface(data);
 
 }
 
 
 /* =========================================================
-   UPDATE PROFILE UI
+   UPDATE USER INTERFACE
    ========================================================= */
 
-function updateProfileUI() {
-
-    if (!currentUser) return;
+function updateUserInterface(profile) {
 
     const name =
-        currentProfile?.full_name ||
-        currentUser.email?.split("@")[0] ||
-        "User";
+        profile.full_name ||
+        currentUser?.email ||
+        "PDS User";
+
 
     const initials =
+        getInitials(name);
+
+
+    document
+        .querySelectorAll(".user-name")
+        .forEach(element => {
+
+            element.textContent = name;
+
+        });
+
+
+    document
+        .querySelectorAll(".user-email")
+        .forEach(element => {
+
+            element.textContent =
+                currentUser?.email || "";
+
+        });
+
+
+    document
+        .querySelectorAll(".user-role")
+        .forEach(element => {
+
+            element.textContent =
+                profile.position ||
+                profile.role ||
+                "Member";
+
+        });
+
+
+    document
+        .querySelectorAll(".avatar")
+        .forEach(element => {
+
+            element.textContent = initials;
+
+        });
+
+
+    document
+        .querySelectorAll(".top-avatar")
+        .forEach(element => {
+
+            element.textContent = initials;
+
+        });
+
+}
+
+
+/* =========================================================
+   INITIALS
+   ========================================================= */
+
+function getInitials(name) {
+
+    if (!name) return "PU";
+
+
+    const parts =
         name
-            .split(" ")
-            .map(word => word.charAt(0))
-            .join("")
+            .trim()
+            .split(/\s+/);
+
+
+    if (parts.length === 1) {
+
+        return parts[0]
             .substring(0, 2)
             .toUpperCase();
 
-    document.querySelectorAll(".profile-name").forEach(el => {
-        el.textContent = name;
+    }
+
+
+    return (
+        parts[0][0] +
+        parts[parts.length - 1][0]
+    ).toUpperCase();
+
+}
+
+
+/* =========================================================
+   SIGN IN
+   ========================================================= */
+
+async function signIn() {
+
+    const email =
+        document.getElementById("loginEmail")?.value.trim();
+
+    const password =
+        document.getElementById("loginPassword")?.value;
+
+
+    if (!email || !password) {
+
+        alert(
+            "Please enter your email and password."
+        );
+
+        return;
+
+    }
+
+
+    const {
+        data,
+        error
+    } = await supabaseClient.auth.signInWithPassword({
+
+        email: email,
+
+        password: password
+
     });
 
-    document.querySelectorAll(".profile-email").forEach(el => {
-        el.textContent = currentUser.email || "";
-    });
-
-    document.querySelectorAll(".avatar").forEach(el => {
-        el.textContent = initials;
-    });
-
-    document.querySelectorAll(".top-avatar").forEach(el => {
-        el.textContent = initials;
-    });
-
-}
-
-
-/* =========================================================
-   DASHBOARD
-   ========================================================= */
-
-async function loadDashboard() {
-
-    if (!currentUser) return;
-
-    const { data: projects, error } = await supabaseClient
-        .from("projects")
-        .select("*")
-        .eq("owner_id", currentUser.id);
-
-    if (error) {
-
-        console.error("Projects error:", error);
-
-        return;
-    }
-
-    const { data: documents, error: documentError } =
-        await supabaseClient
-            .from("documents")
-            .select("*")
-            .eq("owner_id", currentUser.id);
-
-    if (documentError) {
-
-        console.error("Documents error:", documentError);
-
-        return;
-    }
-
-    const totalProjects = projects?.length || 0;
-    const totalDocuments = documents?.length || 0;
-
-    const ongoing =
-        projects?.filter(p =>
-            ["Ongoing", "In Progress"].includes(p.status)
-        ).length || 0;
-
-    const completed =
-        projects?.filter(p =>
-            p.status === "Completed"
-        ).length || 0;
-
-    updateStat("totalProjects", totalProjects);
-    updateStat("totalDocuments", totalDocuments);
-    updateStat("ongoingProjects", ongoing);
-    updateStat("completedProjects", completed);
-
-}
-
-
-/* =========================================================
-   UPDATE STAT
-   ========================================================= */
-
-function updateStat(id, value) {
-
-    const element = document.getElementById(id);
-
-    if (element) {
-        element.textContent = value;
-    }
-
-}
-
-
-/* =========================================================
-   PROJECTS
-   ========================================================= */
-
-async function loadProjects() {
-
-    if (!currentUser) return;
-
-    const { data, error } = await supabaseClient
-        .from("projects")
-        .select("*")
-        .eq("owner_id", currentUser.id)
-        .order("created_at", { ascending: false });
-
-    if (error) {
-
-        console.error("Project loading error:", error);
-
-        return;
-    }
-
-    renderProjects(data || []);
-
-}
-
-
-/* =========================================================
-   RENDER PROJECTS
-   ========================================================= */
-
-function renderProjects(projects) {
-
-    const container =
-        document.getElementById("projectList");
-
-    if (!container) return;
-
-    if (!projects.length) {
-
-        container.innerHTML = `
-            <div class="empty-card">
-                <div class="empty-icon">+</div>
-
-                <h2>No projects yet</h2>
-
-                <p>
-                    Create your first project to start monitoring.
-                </p>
-
-                <button
-                    class="button primary"
-                    onclick="openProjectModal()">
-                    + New Project
-                </button>
-            </div>
-        `;
-
-        return;
-    }
-
-    container.innerHTML = projects.map(project => {
-
-        const progress =
-            getProjectProgress(project.status);
-
-        return `
-            <div class="project-row">
-
-                <div>
-                    <strong>${escapeHTML(project.name)}</strong>
-                    <small>
-                        ${escapeHTML(project.project_code || "")}
-                    </small>
-                </div>
-
-                <div>
-                    ${escapeHTML(project.location || "—")}
-                </div>
-
-                <div>
-                    <span class="status ${getStatusClass(project.status)}">
-                        ${escapeHTML(project.status)}
-                    </span>
-                </div>
-
-                <div>
-                    <div class="progress">
-                        <div style="width:${progress}%"></div>
-                    </div>
-                </div>
-
-                <div>
-                    <button onclick="viewProject('${project.id}')">
-                        View
-                    </button>
-                </div>
-
-            </div>
-        `;
-
-    }).join("");
-
-}
-
-
-/* =========================================================
-   PROJECT PROGRESS
-   ========================================================= */
-
-function getProjectProgress(status) {
-
-    switch (status) {
-
-        case "Planning":
-            return 10;
-
-        case "Ongoing":
-            return 50;
-
-        case "In Progress":
-            return 50;
-
-        case "Completed":
-            return 100;
-
-        case "On Hold":
-            return 25;
-
-        default:
-            return 0;
-
-    }
-
-}
-
-
-/* =========================================================
-   STATUS CLASS
-   ========================================================= */
-
-function getStatusClass(status) {
-
-    switch (status) {
-
-        case "Completed":
-            return "completed";
-
-        case "Ongoing":
-        case "In Progress":
-            return "ongoing";
-
-        case "On Hold":
-            return "review";
-
-        case "Planning":
-            return "upcoming";
-
-        default:
-            return "";
-
-    }
-
-}
-
-
-/* =========================================================
-   CREATE PROJECT
-   ========================================================= */
-
-async function createProject(event) {
-
-    event.preventDefault();
-
-    if (!currentUser) {
-
-        alert("Please sign in first.");
-
-        return;
-    }
-
-    const name =
-        document.getElementById("projectName")?.value.trim();
-
-    const code =
-        document.getElementById("projectCode")?.value.trim();
-
-    const location =
-        document.getElementById("projectLocation")?.value.trim();
-
-    const status =
-        document.getElementById("projectStatus")?.value ||
-        "Planning";
-
-    const targetDate =
-        document.getElementById("projectTargetDate")?.value ||
-        null;
-
-    const notes =
-        document.getElementById("projectNotes")?.value.trim();
-
-    if (!name) {
-
-        alert("Please enter a project name.");
-
-        return;
-    }
-
-    const { data, error } = await supabaseClient
-        .from("projects")
-        .insert({
-
-            owner_id: currentUser.id,
-
-            project_code: code || null,
-
-            name: name,
-
-            location: location || null,
-
-            status: status,
-
-            target_date: targetDate,
-
-            notes: notes || null
-
-        })
-        .select()
-        .single();
 
     if (error) {
 
         console.error(error);
 
         alert(
-            "Unable to create project.\n\n" +
+            "Sign in failed:\n\n" +
             error.message
         );
 
         return;
+
     }
 
-    alert("Project created successfully.");
 
-    closeModal();
+    currentUser = data.user;
 
-    await loadProjects();
-    await loadDashboard();
+    await loadUserProfile();
+
+    showApplication();
 
 }
 
 
 /* =========================================================
-   DOCUMENTS
+   SIGN OUT
    ========================================================= */
 
-async function loadDocuments() {
+async function signOut() {
 
-    if (!currentUser) return;
+    const {
+        error
+    } = await supabaseClient.auth.signOut();
 
-    const { data, error } = await supabaseClient
-        .from("documents")
-        .select("*")
-        .eq("owner_id", currentUser.id)
-        .order("created_at", { ascending: false });
-
-    if (error) {
-
-        console.error("Documents error:", error);
-
-        return;
-    }
-
-    renderDocuments(data || []);
-
-}
-
-
-/* =========================================================
-   RENDER DOCUMENTS
-   ========================================================= */
-
-function renderDocuments(documents) {
-
-    const container =
-        document.getElementById("documentList");
-
-    if (!container) return;
-
-    if (!documents.length) {
-
-        container.innerHTML = `
-            <div class="empty-card">
-
-                <div class="empty-icon">
-                    📁
-                </div>
-
-                <h2>No documents yet</h2>
-
-                <p>
-                    Upload project documents to your library.
-                </p>
-
-                <button
-                    class="button primary"
-                    onclick="openUploadModal()">
-                    Upload Document
-                </button>
-
-            </div>
-        `;
-
-        return;
-    }
-
-    container.innerHTML = documents.map(document => {
-
-        const type =
-            getFileType(document.file_name);
-
-        return `
-            <div class="library-item"
-                 data-type="${type}">
-
-                <div class="library-icon">
-                    ${type.toUpperCase()}
-                </div>
-
-                <div>
-
-                    <strong>
-                        ${escapeHTML(document.title)}
-                    </strong>
-
-                    <span>
-                        ${escapeHTML(document.file_name)}
-                    </span>
-
-                </div>
-
-                <button
-                    onclick="openDocument('${document.file_path}')">
-                    Open
-                </button>
-
-            </div>
-        `;
-
-    }).join("");
-
-}
-
-
-/* =========================================================
-   FILE TYPE
-   ========================================================= */
-
-function getFileType(filename) {
-
-    if (!filename) return "other";
-
-    const extension =
-        filename.split(".").pop().toLowerCase();
-
-    if (extension === "pdf")
-        return "pdf";
-
-    if (
-        extension === "xlsx" ||
-        extension === "xls" ||
-        extension === "csv"
-    )
-        return "excel";
-
-    if (
-        extension === "doc" ||
-        extension === "docx"
-    )
-        return "word";
-
-    return "other";
-
-}
-
-
-/* =========================================================
-   OPEN DOCUMENT
-   ========================================================= */
-
-async function openDocument(path) {
-
-    if (!path) {
-
-        alert("File path is missing.");
-
-        return;
-    }
-
-    const { data, error } =
-        await supabaseClient.storage
-            .from("documents")
-            .createSignedUrl(path, 3600);
 
     if (error) {
 
         console.error(error);
 
         alert(
-            "Unable to open document.\n\n" +
+            "Unable to sign out:\n\n" +
             error.message
         );
 
         return;
+
     }
 
-    window.open(
-        data.signedUrl,
-        "_blank"
-    );
+
+    currentUser = null;
+
+    showLogin();
 
 }
 
 
 /* =========================================================
-   UPLOAD DOCUMENT
+   LOGIN PAGE
    ========================================================= */
 
-async function uploadDocument(event) {
+function showLogin() {
 
-    event.preventDefault();
+    const loginPage =
+        document.getElementById("loginPage");
 
-    if (!currentUser) {
+    const app =
+        document.querySelector(".app");
 
-        alert("Please sign in first.");
 
-        return;
+    if (loginPage) {
+
+        loginPage.style.display = "flex";
+
     }
 
-    const file =
-        document.getElementById("documentFile")?.files[0];
 
-    const title =
-        document.getElementById("documentTitle")?.value.trim();
+    if (app) {
 
-    const projectName =
-        document.getElementById("documentProject")?.value.trim();
+        app.style.display = "none";
 
-    if (!file) {
-
-        alert("Please select a file.");
-
-        return;
     }
-
-    if (!title) {
-
-        alert("Please enter a document title.");
-
-        return;
-    }
-
-    const safeName =
-        file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-
-    const filePath =
-        `${currentUser.id}/${Date.now()}_${safeName}`;
-
-    const { error: uploadError } =
-        await supabaseClient.storage
-            .from("documents")
-            .upload(filePath, file);
-
-    if (uploadError) {
-
-        console.error(uploadError);
-
-        alert(
-            "Upload failed.\n\n" +
-            uploadError.message
-        );
-
-        return;
-    }
-
-    const { error: databaseError } =
-        await supabaseClient
-            .from("documents")
-            .insert({
-
-                owner_id: currentUser.id,
-
-                title: title,
-
-                project_name:
-                    projectName || null,
-
-                file_name:
-                    file.name,
-
-                file_path:
-                    filePath,
-
-                mime_type:
-                    file.type || null,
-
-                size_bytes:
-                    file.size
-
-            });
-
-    if (databaseError) {
-
-        console.error(databaseError);
-
-        alert(
-            "File uploaded, but database record failed.\n\n" +
-            databaseError.message
-        );
-
-        return;
-    }
-
-    alert("Document uploaded successfully.");
-
-    closeModal();
-
-    await loadDocuments();
-    await loadDashboard();
 
 }
 
 
 /* =========================================================
-   VIEW PROJECT
+   SHOW APPLICATION
    ========================================================= */
 
-async function viewProject(id) {
+function showApplication() {
 
-    const { data, error } =
-        await supabaseClient
-            .from("projects")
-            .select("*")
-            .eq("id", id)
-            .single();
+    const loginPage =
+        document.getElementById("loginPage");
 
-    if (error) {
+    const app =
+        document.querySelector(".app");
 
-        alert(error.message);
 
-        return;
+    if (loginPage) {
+
+        loginPage.style.display = "none";
+
     }
 
-    alert(
-        "PROJECT\n\n" +
 
-        "Name: " +
-        data.name +
+    if (app) {
 
-        "\nCode: " +
-        (data.project_code || "—") +
+        app.style.display = "flex";
 
-        "\nLocation: " +
-        (data.location || "—") +
-
-        "\nStatus: " +
-        data.status +
-
-        "\nTarget Date: " +
-        (data.target_date || "—") +
-
-        "\n\nNotes:\n" +
-        (data.notes || "—")
-    );
-
-}
-
-
-/* =========================================================
-   DELETE PROJECT
-   ========================================================= */
-
-async function deleteProject(id) {
-
-    if (!confirm(
-        "Are you sure you want to delete this project?"
-    )) {
-        return;
     }
-
-    const { error } =
-        await supabaseClient
-            .from("projects")
-            .delete()
-            .eq("id", id);
-
-    if (error) {
-
-        alert(error.message);
-
-        return;
-    }
-
-    await loadProjects();
-    await loadDashboard();
 
 }
 
@@ -829,94 +578,135 @@ async function deleteProject(id) {
 
 function showPage(pageId) {
 
-    document.querySelectorAll(".page")
-        .forEach(page => {
+    const pages =
+        document.querySelectorAll(".page");
 
-            page.classList.remove("active-page");
+    const navItems =
+        document.querySelectorAll(".nav-item");
 
-        });
 
-    const page =
+    pages.forEach(page => {
+
+        page.classList.remove(
+            "active-page"
+        );
+
+    });
+
+
+    const selectedPage =
         document.getElementById(pageId);
 
-    if (page) {
 
-        page.classList.add("active-page");
+    if (selectedPage) {
+
+        selectedPage.classList.add(
+            "active-page"
+        );
 
     }
 
-    document.querySelectorAll(".nav-item")
-        .forEach(item => {
 
-            item.classList.toggle(
-                "active",
-                item.dataset.page === pageId
-            );
+    navItems.forEach(item => {
 
-        });
+        item.classList.remove("active");
+
+
+        if (
+            item.dataset.page ===
+            pageId
+        ) {
+
+            item.classList.add("active");
+
+        }
+
+    });
+
 
     window.scrollTo({
+
         top: 0,
+
         behavior: "smooth"
+
     });
 
 }
 
 
 /* =========================================================
-   NAVIGATION
+   SIDEBAR
    ========================================================= */
 
-function setupNavigation() {
+document.addEventListener(
+    "click",
+    function(event) {
 
-    document.querySelectorAll(".nav-item")
-        .forEach(item => {
+        const item =
+            event.target.closest(".nav-item");
 
-            item.addEventListener("click", event => {
 
-                event.preventDefault();
+        if (!item) return;
 
-                const page =
-                    item.dataset.page;
 
-                if (page) {
+        event.preventDefault();
 
-                    showPage(page);
 
-                }
+        const page =
+            item.dataset.page;
 
-            });
 
-        });
+        if (page) {
 
-}
+            showPage(page);
+
+        }
+
+    }
+);
 
 
 /* =========================================================
-   SEARCH
+   GLOBAL SEARCH
    ========================================================= */
 
-function setupSearch() {
+const globalSearch =
+    document.getElementById(
+        "globalSearch"
+    );
 
-    const search =
-        document.getElementById("globalSearch");
 
-    if (!search) return;
+if (globalSearch) {
 
-    search.addEventListener("input", function () {
+    globalSearch.addEventListener(
+        "input",
+        function() {
 
-        const value =
-            this.value.toLowerCase().trim();
+            const search =
+                this.value
+                    .toLowerCase()
+                    .trim();
 
-        if (!value) return;
 
-        document.querySelectorAll(".page")
-            .forEach(page => {
+            if (!search) return;
+
+
+            const pages =
+                document.querySelectorAll(
+                    ".page"
+                );
+
+
+            pages.forEach(page => {
+
+                const text =
+                    page.innerText
+                        .toLowerCase();
+
 
                 if (
-                    page.innerText
-                        .toLowerCase()
-                        .includes(value)
+                    text.includes(search)
                 ) {
 
                     showPage(page.id);
@@ -925,7 +715,8 @@ function setupSearch() {
 
             });
 
-    });
+        }
+    );
 
 }
 
@@ -934,12 +725,13 @@ function setupSearch() {
    CTRL + K
    ========================================================= */
 
-function setupKeyboardShortcuts() {
-
-    document.addEventListener("keydown", event => {
+document.addEventListener(
+    "keydown",
+    function(event) {
 
         if (
-            (event.ctrlKey || event.metaKey) &&
+            (event.ctrlKey ||
+             event.metaKey) &&
             event.key.toLowerCase() === "k"
         ) {
 
@@ -949,21 +741,17 @@ function setupKeyboardShortcuts() {
 
         }
 
-        if (event.key === "Escape") {
-
-            closeModal();
-
-        }
-
-    });
-
-}
+    }
+);
 
 
 function focusSearch() {
 
     const search =
-        document.getElementById("globalSearch");
+        document.getElementById(
+            "globalSearch"
+        );
+
 
     if (search) {
 
@@ -977,188 +765,31 @@ function focusSearch() {
 
 
 /* =========================================================
-   MODAL
+   INITIALIZE
    ========================================================= */
 
-function openModal(
-    title,
-    description,
-    inputPlaceholder
-) {
+document.addEventListener(
+    "DOMContentLoaded",
+    async function() {
 
-    const modal =
-        document.getElementById("modal");
+        console.log(
+            "PDS HUB initializing..."
+        );
 
-    if (!modal) return;
 
-    const titleElement =
-        document.getElementById("modalTitle");
+        await checkAuth();
 
-    const descriptionElement =
-        document.getElementById("modalDescription");
 
-    const input =
-        document.getElementById("modalInput");
+        /*
+           Only show dashboard after
+           authentication has been checked.
+        */
 
-    if (titleElement)
-        titleElement.textContent = title;
+        if (currentUser) {
 
-    if (descriptionElement)
-        descriptionElement.textContent = description;
+            showPage("overview");
 
-    if (input) {
-
-        input.placeholder =
-            inputPlaceholder || "";
-
-        input.focus();
+        }
 
     }
-
-    modal.classList.add("open");
-
-}
-
-
-/* =========================================================
-   CLOSE MODAL
-   ========================================================= */
-
-function closeModal() {
-
-    const modal =
-        document.getElementById("modal");
-
-    if (modal) {
-
-        modal.classList.remove("open");
-
-    }
-
-    const form =
-        document.getElementById("modalForm");
-
-    if (form) {
-
-        form.reset();
-
-    }
-
-}
-
-
-/* =========================================================
-   MODAL ACTIONS
-   ========================================================= */
-
-function openUpdateModal() {
-
-    openModal(
-        "New Update",
-        "Add an update to your PDS Hub workspace.",
-        "Update title"
-    );
-
-}
-
-
-function openProjectModal() {
-
-    openModal(
-        "New Project",
-        "Create a new project for monitoring.",
-        "Project name"
-    );
-
-}
-
-
-function openUploadModal() {
-
-    openModal(
-        "Upload Document",
-        "Add a document to your PDS Hub library.",
-        "Document name"
-    );
-
-}
-
-
-/* =========================================================
-   LIBRARY FILTER
-   ========================================================= */
-
-function filterLibrary() {
-
-    const searchInput =
-        document.getElementById("librarySearch");
-
-    const typeFilter =
-        document.getElementById("fileTypeFilter");
-
-    const search =
-        searchInput
-            ? searchInput.value.toLowerCase().trim()
-            : "";
-
-    const type =
-        typeFilter
-            ? typeFilter.value
-            : "all";
-
-    document.querySelectorAll(".library-item")
-        .forEach(item => {
-
-            const text =
-                item.innerText.toLowerCase();
-
-            const itemType =
-                item.dataset.type;
-
-            const matchesSearch =
-                text.includes(search);
-
-            const matchesType =
-                type === "all" ||
-                itemType === type;
-
-            item.style.display =
-                matchesSearch && matchesType
-                    ? "flex"
-                    : "none";
-
-        });
-
-}
-
-
-/* =========================================================
-   LOGIN STATE
-   ========================================================= */
-
-function showLoginState() {
-
-    console.log(
-        "PDS Hub requires authentication."
-    );
-
-}
-
-
-/* =========================================================
-   ESCAPE HTML
-   ========================================================= */
-
-function escapeHTML(value) {
-
-    if (value === null || value === undefined)
-        return "";
-
-    return String(value)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-
-}
+);
