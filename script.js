@@ -26,32 +26,49 @@ let modalMode = "project";
 ========================================================= */
 
 function showLogin() {
+    const loginPanel = document.getElementById("loginPanel");
+    const registerPanel = document.getElementById("registerPanel");
 
-    document.getElementById("loginPanel").style.display = "block";
-    document.getElementById("registerPanel").style.display = "none";
+    if (loginPanel) {
+        loginPanel.style.display = "block";
+    }
+
+    if (registerPanel) {
+        registerPanel.style.display = "none";
+    }
 
     clearAuthMessages();
 }
 
 
 function showRegister() {
+    const loginPanel = document.getElementById("loginPanel");
+    const registerPanel = document.getElementById("registerPanel");
 
-    document.getElementById("loginPanel").style.display = "none";
-    document.getElementById("registerPanel").style.display = "block";
+    if (loginPanel) {
+        loginPanel.style.display = "none";
+    }
+
+    if (registerPanel) {
+        registerPanel.style.display = "block";
+    }
 
     clearAuthMessages();
 }
 
 
 function clearAuthMessages() {
-
     const loginMessage = document.getElementById("loginMessage");
     const registerMessage = document.getElementById("registerMessage");
 
-    if (loginMessage) loginMessage.textContent = "";
-    if (registerMessage) registerMessage.textContent = "";
-}
+    if (loginMessage) {
+        loginMessage.textContent = "";
+    }
 
+    if (registerMessage) {
+        registerMessage.textContent = "";
+    }
+}
 
 /* =========================================================
    AUTH MESSAGE
