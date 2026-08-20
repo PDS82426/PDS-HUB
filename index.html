@@ -537,8 +537,8 @@
    The anon/public key is safe to expose client-side; RLS
    policies (see schema.sql) control what each user can see.
    ========================================================= */
-const SUPABASE_URL = https://zvwghoabsqfyakbqzhil.supabase.co;       // e.g. https://xxxxx.supabase.co
-const SUPABASE_ANON_KEY = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp2d2dob2Fic3FmeWFrYnF6aGlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcxODAxMDQsImV4cCI6MjEwMjc1NjEwNH0.GygaBIhjAOKBMfMl3W8hM3Iox2rSUs9FF-eW_PaSIY0;      // starts with "eyJ..."
+const SUPABASE_URL = "https://zvwghoabsqfyakbqzhil.supabase.co";       // e.g. https://xxxxx.supabase.co
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp2d2dob2Fic3FmeWFrYnF6aGlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcxODAxMDQsImV4cCI6MjEwMjc1NjEwNH0.GygaBIhjAOKBMfMl3W8hM3Iox2rSUs9FF-eW_PaSIY0";      // starts with "eyJ..."
 
 const isConfigured = !SUPABASE_URL.includes("YOUR_") && !SUPABASE_ANON_KEY.includes("YOUR_");
 
