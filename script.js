@@ -1,20 +1,33 @@
 /* =========================================================
    PDS HUB
-   Supabase + GitHub Pages
+   COMPLETE SUPABASE + GITHUB PAGES SCRIPT
    ========================================================= */
 
-cconst SUPABASE_URL = "https://zvwghoabsqfyakbqzhil.supabase.co";
+
+/* =========================================================
+   SUPABASE CONFIGURATION
+========================================================= */
+
+const SUPABASE_URL =
+    "https://zvwghoabsqfyakbqzhil.supabase.co";
 
 const SUPABASE_ANON_KEY =
-    "YOUR_ACTUAL_PUBLISHABLE_KEY";
+    "sb_publishable_oJ3Zc3TplfYgePQEmTrJ8Q_qycxR0jQ";
+
+
+/* =========================================================
+   CREATE SUPABASE CLIENT
+========================================================= */
 
 const db = window.supabase.createClient(
     SUPABASE_URL,
     SUPABASE_ANON_KEY
 );
 
-console.log("PDS HUB SCRIPT LOADED");
-console.log("Supabase client:", db);
+
+/* =========================================================
+   GLOBAL STATE
+========================================================= */
 
 let currentUser = null;
 let currentProfile = null;
@@ -26,8 +39,12 @@ let modalMode = "project";
 ========================================================= */
 
 function showLogin() {
-    const loginPanel = document.getElementById("loginPanel");
-    const registerPanel = document.getElementById("registerPanel");
+
+    const loginPanel =
+        document.getElementById("loginPanel");
+
+    const registerPanel =
+        document.getElementById("registerPanel");
 
     if (loginPanel) {
         loginPanel.style.display = "block";
@@ -42,8 +59,12 @@ function showLogin() {
 
 
 function showRegister() {
-    const loginPanel = document.getElementById("loginPanel");
-    const registerPanel = document.getElementById("registerPanel");
+
+    const loginPanel =
+        document.getElementById("loginPanel");
+
+    const registerPanel =
+        document.getElementById("registerPanel");
 
     if (loginPanel) {
         loginPanel.style.display = "none";
@@ -58,8 +79,12 @@ function showRegister() {
 
 
 function clearAuthMessages() {
-    const loginMessage = document.getElementById("loginMessage");
-    const registerMessage = document.getElementById("registerMessage");
+
+    const loginMessage =
+        document.getElementById("loginMessage");
+
+    const registerMessage =
+        document.getElementById("registerMessage");
 
     if (loginMessage) {
         loginMessage.textContent = "";
@@ -70,124 +95,215 @@ function clearAuthMessages() {
     }
 }
 
+
 /* =========================================================
    AUTH MESSAGE
 ========================================================= */
 
-function authMessage(elementId, message, success = false) {
+function authMessage(
+    elementId,
+    message,
+    success = false
+) {
 
-    const el = document.getElementById(elementId);
+    const element =
+        document.getElementById(elementId);
 
-    if (!el) return;
+    if (!element) {
+        return;
+    }
 
-    el.textContent = message;
+    element.textContent = message;
 
-    el.style.color = success
-        ? "#1d5b45"
-        : "#b34b42";
+    element.style.color =
+        success
+            ? "#1d5b45"
+            : "#b34b42";
 }
 
 
 /* =========================================================
-   SIGN UP
+   CREATE ACCOUNT
 ========================================================= */
 
 async function registerUser(event) {
+
     event.preventDefault();
 
-    const name = document.getElementById("registerName").value.trim();
-    const position = document.getElementById("registerPosition").value.trim();
-    const email = document.getElementById("registerEmail").value.trim();
-    const password = document.getElementById("registerPassword").value;
-    const confirm = document.getElementById("registerConfirm").value;
+    const name =
+        document
+            .getElementById("registerName")
+            .value
+            .trim();
 
-    if (password !== confirm) {
+    const position =
+        document
+            .getElementById("registerPosition")
+            .value
+            .trim();
+
+    const email =
+        document
+            .getElementById("registerEmail")
+            .value
+            .trim();
+
+    const password =
+        document
+            .getElementById("registerPassword")
+            .value;
+
+    const confirm =
+        document
+            .getElementById("registerConfirm")
+            .value;
+
+
+    if (!name) {
+
         authMessage(
             "registerMessage",
-            "Passwords do not match."
+            "Please enter your full name."
         );
+
         return;
     }
 
+
+    if (!email) {
+
+        authMessage(
+            "registerMessage",
+            "Please enter your email."
+        );
+
+        return;
+    }
+
+
     if (password.length < 6) {
+
         authMessage(
             "registerMessage",
             "Password must be at least 6 characters."
         );
+
         return;
     }
 
-    const button = document.querySelector(
-        "#registerForm button[type='submit']"
-    );
 
-    button.disabled = true;
-    button.textContent = "Creating...";
+    if (password !== confirm) {
+
+        authMessage(
+            "registerMessage",
+            "Passwords do not match."
+        );
+
+        return;
+    }
+
+
+    const button =
+        document.querySelector(
+            "#registerForm button[type='submit']"
+        );
+
+
+    if (button) {
+
+        button.disabled = true;
+        button.textContent = "Creating account...";
+
+    }
+
 
     authMessage(
         "registerMessage",
         "Creating account..."
     );
 
+
     try {
 
-        const { data, error } = await db.auth.signUp({
+        const {
+            data,
+            error
+        } = await db.auth.signUp({
+
             email: email,
+
             password: password,
 
             options: {
-                data: {
-                    full_name: name,
-                    position: position
-                },
 
-                emailRedirectTo:
-                    "https://christinedpwh2024-blip.github.io/PDS-HUB/"
+                data: {
+
+                    full_name: name,
+
+                    position: position
+
+                }
+
             }
+
         });
 
-        console.log("Supabase signup:", data);
-        console.log("Supabase error:", error);
 
         if (error) {
+
             throw error;
+
         }
 
-        if (!data.user) {
-            throw new Error(
-                "Supabase did not return a user."
-            );
-        }
 
-        if (data.session) {
+        /*
+           Supabase may return a user without
+           a session when email confirmation
+           is enabled.
+        */
 
-            await createProfile(
-                data.user,
-                name,
-                position
-            );
+        if (data && data.user) {
 
-            authMessage(
-                "registerMessage",
-                "Account created successfully! You can now sign in.",
-                true
-            );
+            if (data.session) {
 
-            document
-                .getElementById("registerForm")
-                .reset();
+                currentUser =
+                    data.user;
+
+                await createProfile(
+                    data.user,
+                    name,
+                    position
+                );
+
+                authMessage(
+                    "registerMessage",
+                    "Account created successfully. Loading PDS Hub...",
+                    true
+                );
+
+                await loadApplication();
+
+            } else {
+
+                authMessage(
+                    "registerMessage",
+                    "Account created. Please check your email to confirm your account before signing in.",
+                    true
+                );
+
+                document
+                    .getElementById("registerForm")
+                    .reset();
+
+            }
 
         } else {
 
             authMessage(
                 "registerMessage",
-                "Account created! Please check your email and click the confirmation link.",
-                true
+                "Account creation did not return a user. Please try again."
             );
 
-            document
-                .getElementById("registerForm")
-                .reset();
         }
 
     } catch (error) {
@@ -197,81 +313,23 @@ async function registerUser(event) {
             error
         );
 
+
         authMessage(
             "registerMessage",
-            "Create account failed: " +
-            error.message
+            error.message ||
+            "Unable to create account."
         );
 
     } finally {
 
-        button.disabled = false;
-        button.textContent = "Create Account";
+        if (button) {
+
+            button.disabled = false;
+            button.textContent = "Create Account";
+
+        }
 
     }
-}
-
-
-    authMessage(
-        "registerMessage",
-        "Creating account..."
-    );
-
-
-    const { data, error } =
-        await db.auth.signUp({
-
-            email: email,
-
-            password: password,
-
-            options: {
-
-                data: {
-                    full_name: name,
-                    position: position
-                }
-
-            }
-
-        });
-
-
-    if (error) {
-
-        authMessage(
-            "registerMessage",
-            error.message
-        );
-
-        return;
-    }
-
-
-    /*
-       Create profile if session already exists.
-       If email confirmation is enabled, the profile
-       will be created by the database trigger if available.
-    */
-
-    if (data.user && data.session) {
-
-        await createProfile(
-            data.user,
-            name,
-            position
-        );
-    }
-
-
-    authMessage(
-        "registerMessage",
-        "Account created successfully. Check your email if confirmation is required.",
-        true
-    );
-
-
-    document.getElementById("registerForm").reset();
 
 }
 
@@ -280,20 +338,34 @@ async function registerUser(event) {
    CREATE PROFILE
 ========================================================= */
 
-async function createProfile(user, name, position) {
+async function createProfile(
+    user,
+    name = "",
+    position = ""
+) {
 
-    if (!user) return;
+    if (!user) {
+        return;
+    }
 
 
-    const { error } = await db
+    const {
+        error
+    } = await db
         .from("profiles")
         .upsert({
 
             id: user.id,
 
-            full_name: name || user.email,
+            full_name:
+                name ||
+                user.user_metadata?.full_name ||
+                user.email,
 
-            position: position || "",
+            position:
+                position ||
+                user.user_metadata?.position ||
+                "",
 
             role: "member"
 
@@ -307,7 +379,7 @@ async function createProfile(user, name, position) {
     if (error) {
 
         console.error(
-            "Profile creation error:",
+            "PROFILE CREATION ERROR:",
             error
         );
 
@@ -326,10 +398,15 @@ async function loginUser(event) {
 
 
     const email =
-        document.getElementById("loginEmail").value.trim();
+        document
+            .getElementById("loginEmail")
+            .value
+            .trim();
 
     const password =
-        document.getElementById("loginPassword").value;
+        document
+            .getElementById("loginPassword")
+            .value;
 
 
     authMessage(
@@ -338,8 +415,26 @@ async function loginUser(event) {
     );
 
 
-    const { data, error } =
-        await db.auth.signInWithPassword({
+    const button =
+        document.querySelector(
+            "#loginForm button[type='submit']"
+        );
+
+
+    if (button) {
+
+        button.disabled = true;
+        button.textContent = "Signing in...";
+
+    }
+
+
+    try {
+
+        const {
+            data,
+            error
+        } = await db.auth.signInWithPassword({
 
             email: email,
 
@@ -348,23 +443,56 @@ async function loginUser(event) {
         });
 
 
-    if (error) {
+        if (error) {
+
+            throw error;
+
+        }
+
+
+        currentUser =
+            data.user;
+
 
         authMessage(
             "loginMessage",
-            error.message
+            "Sign in successful.",
+            true
         );
 
-        return;
+
+        await loadApplication();
+
+
+        document
+            .getElementById("loginForm")
+            .reset();
+
+
+    } catch (error) {
+
+        console.error(
+            "LOGIN ERROR:",
+            error
+        );
+
+
+        authMessage(
+            "loginMessage",
+            error.message ||
+            "Unable to sign in."
+        );
+
+    } finally {
+
+        if (button) {
+
+            button.disabled = false;
+            button.textContent = "Sign In";
+
+        }
+
     }
-
-
-    currentUser = data.user;
-
-    await loadApplication();
-
-
-    document.getElementById("loginForm").reset();
 
 }
 
@@ -375,13 +503,40 @@ async function loginUser(event) {
 
 async function signOut() {
 
-    await db.auth.signOut();
+    try {
+
+        await db.auth.signOut();
+
+    } catch (error) {
+
+        console.error(
+            "SIGN OUT ERROR:",
+            error
+        );
+
+    }
+
 
     currentUser = null;
+
     currentProfile = null;
 
-    document.getElementById("app").style.display = "none";
-    document.getElementById("authScreen").style.display = "flex";
+
+    const app =
+        document.getElementById("app");
+
+    const authScreen =
+        document.getElementById("authScreen");
+
+
+    if (app) {
+        app.style.display = "none";
+    }
+
+    if (authScreen) {
+        authScreen.style.display = "flex";
+    }
+
 
     showLogin();
 
@@ -394,93 +549,160 @@ async function signOut() {
 
 async function loadApplication() {
 
-    const {
-        data: {
-            user
+    try {
+
+        const {
+            data,
+            error
+        } = await db.auth.getUser();
+
+
+        if (error) {
+
+            console.error(
+                "GET USER ERROR:",
+                error
+            );
+
+            return;
+
         }
-    } = await db.auth.getUser();
 
 
-    if (!user) {
+        const user =
+            data?.user;
 
-        document.getElementById("authScreen").style.display = "flex";
-        document.getElementById("app").style.display = "none";
 
-        return;
+        if (!user) {
+
+            document
+                .getElementById("authScreen")
+                .style.display = "flex";
+
+            document
+                .getElementById("app")
+                .style.display = "none";
+
+            return;
+
+        }
+
+
+        currentUser =
+            user;
+
+
+        await loadProfile();
+
+
+        document
+            .getElementById("authScreen")
+            .style.display = "none";
+
+
+        document
+            .getElementById("app")
+            .style.display = "flex";
+
+
+        updateUserInterface();
+
+
+        await refreshAll();
+
+
+        showPage("overview");
+
+
+    } catch (error) {
+
+        console.error(
+            "APPLICATION LOAD ERROR:",
+            error
+        );
+
     }
-
-
-    currentUser = user;
-
-
-    await loadProfile();
-
-
-    document.getElementById("authScreen").style.display = "none";
-    document.getElementById("app").style.display = "flex";
-
-
-    updateUserInterface();
-
-
-    await refreshAll();
-
-
-    showPage("overview");
 
 }
 
 
 /* =========================================================
-   PROFILE
+   LOAD PROFILE
 ========================================================= */
 
 async function loadProfile() {
 
-    if (!currentUser) return;
+    if (!currentUser) {
+        return;
+    }
 
 
-    const { data, error } = await db
+    const {
+        data,
+        error
+    } = await db
         .from("profiles")
         .select("*")
-        .eq("id", currentUser.id)
+        .eq(
+            "id",
+            currentUser.id
+        )
         .maybeSingle();
 
 
     if (error) {
 
         console.error(
-            "Profile loading error:",
+            "PROFILE LOAD ERROR:",
             error
         );
 
         return;
+
     }
 
 
     if (data) {
 
-        currentProfile = data;
+        currentProfile =
+            data;
 
-    } else {
-
-        await createProfile(
-            currentUser,
-            currentUser.user_metadata?.full_name || "",
-            currentUser.user_metadata?.position || ""
-        );
-
-
-        const { data: profile } = await db
-            .from("profiles")
-            .select("*")
-            .eq("id", currentUser.id)
-            .maybeSingle();
-
-
-        currentProfile = profile;
+        return;
 
     }
+
+
+    await createProfile(
+
+        currentUser,
+
+        currentUser
+            .user_metadata
+            ?.full_name ||
+        "",
+
+        currentUser
+            .user_metadata
+            ?.position ||
+        ""
+
+    );
+
+
+    const {
+        data: profile
+    } = await db
+        .from("profiles")
+        .select("*")
+        .eq(
+            "id",
+            currentUser.id
+        )
+        .maybeSingle();
+
+
+    currentProfile =
+        profile || null;
 
 }
 
@@ -506,51 +728,47 @@ function updateUserInterface() {
         getInitials(name);
 
 
-    const welcomeName =
-        document.getElementById("welcomeName");
-
-    const sidebarName =
-        document.getElementById("sidebarName");
-
-    const sidebarPosition =
-        document.getElementById("sidebarPosition");
-
-    const sidebarAvatar =
-        document.getElementById("sidebarAvatar");
-
-    const topAvatar =
-        document.getElementById("topAvatar");
+    setText(
+        "welcomeName",
+        name.split(" ")[0]
+    );
 
 
-    if (welcomeName)
-        welcomeName.textContent = name.split(" ")[0];
+    setText(
+        "sidebarName",
+        name
+    );
 
 
-    if (sidebarName)
-        sidebarName.textContent = name;
+    setText(
+        "sidebarPosition",
+        position
+    );
 
 
-    if (sidebarPosition)
-        sidebarPosition.textContent = position;
+    setText(
+        "sidebarAvatar",
+        initials
+    );
 
 
-    if (sidebarAvatar)
-        sidebarAvatar.textContent = initials;
-
-
-    if (topAvatar)
-        topAvatar.textContent = initials;
+    setText(
+        "topAvatar",
+        initials
+    );
 
 }
 
 
 function getInitials(name) {
 
-    return name
+    return String(name || "U")
         .split(" ")
         .filter(Boolean)
         .slice(0, 2)
-        .map(word => word[0])
+        .map(
+            word => word[0]
+        )
         .join("")
         .toUpperCase() || "U";
 
@@ -572,7 +790,9 @@ function showPage(pageId) {
 
     pages.forEach(page => {
 
-        page.classList.remove("active-page");
+        page.classList.remove(
+            "active-page"
+        );
 
     });
 
@@ -583,19 +803,28 @@ function showPage(pageId) {
 
     if (selectedPage) {
 
-        selectedPage.classList.add("active-page");
+        selectedPage.classList.add(
+            "active-page"
+        );
 
     }
 
 
     navItems.forEach(item => {
 
-        item.classList.remove("active");
+        item.classList.remove(
+            "active"
+        );
 
 
-        if (item.dataset.page === pageId) {
+        if (
+            item.dataset.page ===
+            pageId
+        ) {
 
-            item.classList.add("active");
+            item.classList.add(
+                "active"
+            );
 
         }
 
@@ -614,30 +843,44 @@ function showPage(pageId) {
    GLOBAL SEARCH
 ========================================================= */
 
-const globalSearch =
-    document.getElementById("globalSearch");
+function setupGlobalSearch() {
+
+    const globalSearch =
+        document.getElementById(
+            "globalSearch"
+        );
 
 
-if (globalSearch) {
+    if (!globalSearch) {
+        return;
+    }
+
 
     globalSearch.addEventListener(
         "input",
         function () {
 
             const search =
-                this.value.toLowerCase().trim();
+                this.value
+                    .toLowerCase()
+                    .trim();
 
 
             if (!search) {
 
-                showPage("overview");
+                showPage(
+                    "overview"
+                );
 
                 return;
+
             }
 
 
             const pages =
-                document.querySelectorAll(".page");
+                document.querySelectorAll(
+                    ".page"
+                );
 
 
             let found = false;
@@ -652,7 +895,9 @@ if (globalSearch) {
                         .includes(search)
                 ) {
 
-                    showPage(page.id);
+                    showPage(
+                        page.id
+                    );
 
                     found = true;
 
@@ -667,15 +912,34 @@ if (globalSearch) {
 
 
 /* =========================================================
-   CTRL + K
+   SEARCH SHORTCUT
 ========================================================= */
+
+function focusSearch() {
+
+    const search =
+        document.getElementById(
+            "globalSearch"
+        );
+
+
+    if (search) {
+
+        search.focus();
+        search.select();
+
+    }
+
+}
+
 
 document.addEventListener(
     "keydown",
     function (event) {
 
         if (
-            (event.ctrlKey || event.metaKey) &&
+            (event.ctrlKey ||
+             event.metaKey) &&
             event.key.toLowerCase() === "k"
         ) {
 
@@ -689,74 +953,101 @@ document.addEventListener(
 );
 
 
-function focusSearch() {
-
-    const search =
-        document.getElementById("globalSearch");
-
-
-    if (search) {
-
-        search.focus();
-        search.select();
-
-    }
-
-}
-
-
 /* =========================================================
    MODAL
 ========================================================= */
-
-const modal =
-    document.getElementById("modal");
-
 
 function openModal(
     title,
     description
 ) {
 
-    document.getElementById(
-        "modalTitle"
-    ).textContent = title;
+    const modal =
+        document.getElementById(
+            "modal"
+        );
 
 
-    document.getElementById(
-        "modalDescription"
-    ).textContent = description;
+    setText(
+        "modalTitle",
+        title
+    );
 
 
-    modal.classList.add("open");
+    setText(
+        "modalDescription",
+        description
+    );
+
+
+    if (modal) {
+
+        modal.classList.add(
+            "open"
+        );
+
+    }
 
 }
 
 
 function closeModal() {
 
-    modal.classList.remove("open");
+    const modal =
+        document.getElementById(
+            "modal"
+        );
 
-    document
-        .getElementById("modalForm")
-        .reset();
+
+    if (modal) {
+
+        modal.classList.remove(
+            "open"
+        );
+
+    }
+
+
+    const form =
+        document.getElementById(
+            "modalForm"
+        );
+
+
+    if (form) {
+        form.reset();
+    }
 
 }
 
 
 function openProjectModal() {
 
-    modalMode = "project";
+    modalMode =
+        "project";
 
 
-    document.getElementById(
-        "projectFields"
-    ).style.display = "block";
+    const projectFields =
+        document.getElementById(
+            "projectFields"
+        );
+
+    const uploadFields =
+        document.getElementById(
+            "uploadFields"
+        );
 
 
-    document.getElementById(
-        "uploadFields"
-    ).style.display = "none";
+    if (projectFields) {
+        projectFields.style.display =
+            "block";
+    }
+
+
+    if (uploadFields) {
+        uploadFields.style.display =
+            "none";
+    }
 
 
     openModal(
@@ -767,24 +1058,49 @@ function openProjectModal() {
 }
 
 
-function openUploadModal(category = "General") {
+function openUploadModal(
+    category = "General"
+) {
 
-    modalMode = "upload";
-
-
-    document.getElementById(
-        "projectFields"
-    ).style.display = "none";
+    modalMode =
+        "upload";
 
 
-    document.getElementById(
-        "uploadFields"
-    ).style.display = "block";
+    const projectFields =
+        document.getElementById(
+            "projectFields"
+        );
+
+    const uploadFields =
+        document.getElementById(
+            "uploadFields"
+        );
 
 
-    document.getElementById(
-        "documentCategory"
-    ).value = category;
+    if (projectFields) {
+        projectFields.style.display =
+            "none";
+    }
+
+
+    if (uploadFields) {
+        uploadFields.style.display =
+            "block";
+    }
+
+
+    const categoryInput =
+        document.getElementById(
+            "documentCategory"
+        );
+
+
+    if (categoryInput) {
+
+        categoryInput.value =
+            category;
+
+    }
 
 
     openModal(
@@ -801,90 +1117,147 @@ function openUploadModal(category = "General") {
 
 async function saveProject() {
 
-    if (!currentUser) return;
+    if (!currentUser) {
 
-
-   const project = {
-
-    owner_id: currentUser.id,
-
-    project_code:
-        document.getElementById(
-            "projectCode"
-        ).value.trim() || null,
-
-    name:
-        document.getElementById(
-            "projectName"
-        ).value.trim(),
-
-    location:
-        document.getElementById(
-            "projectLocation"
-        ).value.trim() || null,
-
-status:
-    document.getElementById(
-        "projectStatus"
-    ).value,
-
-progress:
-    Math.min(
-        100,
-        Math.max(
-            0,
-            Number(
-                document.getElementById(
-                    "projectProgress"
-                ).value
-            ) || 0
-        )
-    ),
-
-target_date:
-        document.getElementById(
-            "projectTargetDate"
-        ).value || null,
-
-    notes:
-        document.getElementById(
-            "projectNotes"
-        ).value.trim() || null
-};
-    if (!project.name) {
-
-        alert("Please enter a project name.");
+        alert(
+            "Please sign in first."
+        );
 
         return;
+
     }
 
 
-    const { error } =
-        await db
+    const project = {
+
+        owner_id:
+            currentUser.id,
+
+        project_code:
+            document
+                .getElementById(
+                    "projectCode"
+                )
+                .value
+                .trim() ||
+            null,
+
+        name:
+            document
+                .getElementById(
+                    "projectName"
+                )
+                .value
+                .trim(),
+
+        location:
+            document
+                .getElementById(
+                    "projectLocation"
+                )
+                .value
+                .trim() ||
+            null,
+
+        status:
+            document
+                .getElementById(
+                    "projectStatus"
+                )
+                .value,
+
+        target_date:
+            document
+                .getElementById(
+                    "projectTargetDate"
+                )
+                .value ||
+            null,
+
+        notes:
+            document
+                .getElementById(
+                    "projectNotes"
+                )
+                .value
+                .trim() ||
+            null
+
+    };
+
+
+    const progress =
+        Math.max(
+            0,
+            Math.min(
+                100,
+                Number(
+                    document
+                        .getElementById(
+                            "projectProgress"
+                        )
+                        .value || 0
+                )
+            )
+        );
+
+
+    project.progress =
+        progress;
+
+
+    if (!project.name) {
+
+        alert(
+            "Please enter a project name."
+        );
+
+        return;
+
+    }
+
+
+    try {
+
+        const {
+            error
+        } = await db
             .from("projects")
             .insert(project);
 
 
-    if (error) {
+        if (error) {
 
-        console.error(error);
+            throw error;
+
+        }
+
+
+        closeModal();
+
+
+        await refreshAll();
+
+
+        showPage(
+            "projects"
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "SAVE PROJECT ERROR:",
+            error
+        );
+
 
         alert(
             "Could not save project:\n\n" +
             error.message
         );
 
-        return;
     }
-
-
-    closeModal();
-
-
-    await refreshAll();
-
-
-    showPage("projects");
 
 }
 
@@ -897,58 +1270,69 @@ async function uploadDocument() {
 
     if (!currentUser) {
 
-        alert("Please sign in first.");
+        alert(
+            "Please sign in first."
+        );
 
         return;
+
     }
 
 
-    const file =
+    const fileInput =
         document.getElementById(
             "documentFile"
-        ).files[0];
+        );
+
+
+    const file =
+        fileInput?.files?.[0];
 
 
     const title =
-        document.getElementById(
-            "documentTitle"
-        ).value.trim();
+        document
+            .getElementById(
+                "documentTitle"
+            )
+            .value
+            .trim();
 
 
     const category =
-        document.getElementById(
-            "documentCategory"
-        ).value;
+        document
+            .getElementById(
+                "documentCategory"
+            )
+            .value;
 
 
     if (!file) {
 
-        alert("Please select a file.");
+        alert(
+            "Please select a file."
+        );
 
         return;
+
     }
 
 
     if (!title) {
 
-        alert("Please enter a document title.");
+        alert(
+            "Please enter a document title."
+        );
 
         return;
+
     }
 
 
-    /*
-       Create a unique path:
-
-       user-id / timestamp / filename
-    */
-
     const safeFileName =
-        file.name
-            .replace(
-                /[^a-zA-Z0-9._-]/g,
-                "_"
-            );
+        file.name.replace(
+            /[^a-zA-Z0-9._-]/g,
+            "_"
+        );
 
 
     const filePath =
@@ -965,15 +1349,22 @@ async function uploadDocument() {
         );
 
 
-    submitButton.disabled = true;
-    submitButton.textContent = "Uploading...";
+    if (submitButton) {
+
+        submitButton.disabled =
+            true;
+
+        submitButton.textContent =
+            "Uploading...";
+
+    }
 
 
     try {
 
         /*
-           1. Upload physical file
-           to Supabase Storage
+           STEP 1:
+           Upload physical file
         */
 
         const {
@@ -985,9 +1376,16 @@ async function uploadDocument() {
                 filePath,
                 file,
                 {
-                    cacheControl: "3600",
-                    upsert: false,
-                    contentType: file.type
+
+                    cacheControl:
+                        "3600",
+
+                    upsert:
+                        false,
+
+                    contentType:
+                        file.type
+
                 }
             );
 
@@ -1000,8 +1398,8 @@ async function uploadDocument() {
 
 
         /*
-           2. Save file metadata
-           to documents table
+           STEP 2:
+           Save metadata
         */
 
         const {
@@ -1035,9 +1433,8 @@ async function uploadDocument() {
 
 
         /*
-           If database insert fails,
-           remove uploaded file so we
-           don't leave orphaned files.
+           If metadata fails,
+           remove physical file.
         */
 
         if (databaseError) {
@@ -1065,13 +1462,15 @@ async function uploadDocument() {
         await refreshAll();
 
 
-        showPage("content");
+        showPage(
+            "content"
+        );
 
 
     } catch (error) {
 
         console.error(
-            "Upload error:",
+            "UPLOAD ERROR:",
             error
         );
 
@@ -1084,8 +1483,15 @@ async function uploadDocument() {
 
     } finally {
 
-        submitButton.disabled = false;
-        submitButton.textContent = "Save";
+        if (submitButton) {
+
+            submitButton.disabled =
+                false;
+
+            submitButton.textContent =
+                "Save";
+
+        }
 
     }
 
@@ -1096,16 +1502,30 @@ async function uploadDocument() {
    MODAL SUBMIT
 ========================================================= */
 
-document
-    .getElementById("modalForm")
-    .addEventListener(
+function setupModalForm() {
+
+    const form =
+        document.getElementById(
+            "modalForm"
+        );
+
+
+    if (!form) {
+        return;
+    }
+
+
+    form.addEventListener(
         "submit",
         async function (event) {
 
             event.preventDefault();
 
 
-            if (modalMode === "project") {
+            if (
+                modalMode ===
+                "project"
+            ) {
 
                 await saveProject();
 
@@ -1118,6 +1538,8 @@ document
         }
     );
 
+}
+
 
 /* =========================================================
    LOAD PROJECTS
@@ -1125,7 +1547,9 @@ document
 
 async function loadProjects() {
 
-    if (!currentUser) return;
+    if (!currentUser) {
+        return;
+    }
 
 
     const {
@@ -1145,15 +1569,18 @@ async function loadProjects() {
     if (error) {
 
         console.error(
-            "Project error:",
+            "PROJECT ERROR:",
             error
         );
 
         return;
+
     }
 
 
-    renderProjects(data || []);
+    renderProjects(
+        data || []
+    );
 
 }
 
@@ -1162,7 +1589,9 @@ async function loadProjects() {
    RENDER PROJECTS
 ========================================================= */
 
-function renderProjects(projects) {
+function renderProjects(
+    projects
+) {
 
     const list =
         document.getElementById(
@@ -1188,14 +1617,27 @@ function renderProjects(projects) {
 
             list.innerHTML = `
                 <div class="empty-card">
-                    <div class="empty-icon">◫</div>
-                    <h2>No projects yet</h2>
-                    <p>Create your first project.</p>
+
+                    <div class="empty-icon">
+                        ◫
+                    </div>
+
+                    <h2>
+                        No projects yet
+                    </h2>
+
+                    <p>
+                        Create your first project.
+                    </p>
+
                     <button
                         class="button primary"
                         onclick="openProjectModal()">
+
                         + New project
+
                     </button>
+
                 </div>
             `;
 
@@ -1206,9 +1648,19 @@ function renderProjects(projects) {
 
             myList.innerHTML = `
                 <div class="empty-card">
-                    <div class="empty-icon">✓</div>
-                    <h2>No projects yet</h2>
-                    <p>Your projects will appear here.</p>
+
+                    <div class="empty-icon">
+                        ✓
+                    </div>
+
+                    <h2>
+                        No projects yet
+                    </h2>
+
+                    <p>
+                        Your projects will appear here.
+                    </p>
+
                 </div>
             `;
 
@@ -1219,9 +1671,19 @@ function renderProjects(projects) {
 
             overview.innerHTML = `
                 <div class="empty-card">
-                    <div class="empty-icon">◫</div>
-                    <h2>No projects</h2>
-                    <p>Create a project to begin monitoring.</p>
+
+                    <div class="empty-icon">
+                        ◫
+                    </div>
+
+                    <h2>
+                        No projects
+                    </h2>
+
+                    <p>
+                        Create a project to begin monitoring.
+                    </p>
+
                 </div>
             `;
 
@@ -1238,9 +1700,9 @@ function renderProjects(projects) {
     if (list) {
 
         list.innerHTML =
-            projects.map(
-                projectRow
-            ).join("");
+            projects
+                .map(projectRow)
+                .join("");
 
     }
 
@@ -1257,12 +1719,24 @@ function renderProjects(projects) {
 
         myList.innerHTML =
             mine.length
-                ? mine.map(projectCard).join("")
+                ? mine
+                    .map(projectCard)
+                    .join("")
                 : `
                     <div class="empty-card">
-                        <div class="empty-icon">✓</div>
-                        <h2>No projects assigned</h2>
-                        <p>You don't have any projects yet.</p>
+
+                        <div class="empty-icon">
+                            ✓
+                        </div>
+
+                        <h2>
+                            No projects assigned
+                        </h2>
+
+                        <p>
+                            You don't have any projects yet.
+                        </p>
+
                     </div>
                 `;
 
@@ -1274,15 +1748,15 @@ function renderProjects(projects) {
         overview.innerHTML =
             projects
                 .slice(0, 5)
-                .map(
-                    projectDeadline
-                )
+                .map(projectDeadline)
                 .join("");
 
     }
 
 
-    updateProjectStats(projects);
+    updateProjectStats(
+        projects
+    );
 
 }
 
@@ -1291,7 +1765,9 @@ function renderProjects(projects) {
    PROJECT ROW
 ========================================================= */
 
-function projectRow(project) {
+function projectRow(
+    project
+) {
 
     const progress =
         Number(
@@ -1303,29 +1779,50 @@ function projectRow(project) {
         <div class="project-row">
 
             <div>
+
                 <strong>
                     ${escapeHTML(project.name)}
                 </strong>
 
                 <small>
-                    ${escapeHTML(project.project_code || "")}
+                    ${escapeHTML(
+                        project.project_code || ""
+                    )}
                 </small>
+
             </div>
 
-            <div>
-                ${escapeHTML(project.location || "—")}
-            </div>
 
             <div>
-                <span class="status ${statusClass(project.status)}">
-                    ${escapeHTML(project.status)}
+                ${escapeHTML(
+                    project.location || "—"
+                )}
+            </div>
+
+
+            <div>
+
+                <span class="status ${statusClass(
+                    project.status
+                )}">
+
+                    ${escapeHTML(
+                        project.status
+                    )}
+
                 </span>
+
             </div>
+
 
             <div>
 
                 <div class="progress">
-                    <div style="width:${progress}%"></div>
+
+                    <div
+                        style="width:${progress}%">
+                    </div>
+
                 </div>
 
                 <small>
@@ -1334,11 +1831,16 @@ function projectRow(project) {
 
             </div>
 
+
             <div>
+
                 <button
                     onclick="deleteProject('${project.id}')">
+
                     Delete
+
                 </button>
+
             </div>
 
         </div>
@@ -1351,42 +1853,86 @@ function projectRow(project) {
    PROJECT CARD
 ========================================================= */
 
-function projectCard(project) {
+function projectCard(
+    project
+) {
+
+    const progress =
+        Number(
+            project.progress || 0
+        );
+
 
     return `
-        <div class="panel" style="margin-bottom:15px">
+        <div
+            class="panel"
+            style="margin-bottom:15px">
 
             <div class="panel-header">
 
                 <div>
+
                     <div class="eyebrow">
-                        ${escapeHTML(project.project_code || "PROJECT")}
+
+                        ${escapeHTML(
+                            project.project_code ||
+                            "PROJECT"
+                        )}
+
                     </div>
 
+
                     <h2>
-                        ${escapeHTML(project.name)}
+
+                        ${escapeHTML(
+                            project.name
+                        )}
+
                     </h2>
 
+
                     <p>
-                        ${escapeHTML(project.location || "No location")}
+
+                        ${escapeHTML(
+                            project.location ||
+                            "No location"
+                        )}
+
                     </p>
+
                 </div>
 
-                <span class="status ${statusClass(project.status)}">
-                    ${escapeHTML(project.status)}
+
+                <span class="status ${statusClass(
+                    project.status
+                )}">
+
+                    ${escapeHTML(
+                        project.status
+                    )}
+
                 </span>
 
             </div>
 
+
             <div class="progress">
-                <div style="width:${Number(project.progress || 0)}%"></div>
+
+                <div
+                    style="width:${progress}%">
+                </div>
+
             </div>
 
+
             <p>
+
                 Progress:
+
                 <strong>
-                    ${Number(project.progress || 0)}%
+                    ${progress}%
                 </strong>
+
             </p>
 
         </div>
@@ -1396,10 +1942,42 @@ function projectCard(project) {
 
 
 /* =========================================================
-   OVERVIEW PROJECT
+   PROJECT DEADLINE
 ========================================================= */
 
-function projectDeadline(project) {
+function projectDeadline(
+    project
+) {
+
+    let day = "—";
+    let month = "";
+
+
+    if (project.target_date) {
+
+        const date =
+            new Date(
+                project.target_date +
+                "T00:00:00"
+            );
+
+
+        day =
+            date.getDate();
+
+
+        month =
+            date
+                .toLocaleDateString(
+                    "en-US",
+                    {
+                        month: "short"
+                    }
+                )
+                .toUpperCase();
+
+    }
+
 
     return `
         <div class="deadline">
@@ -1407,38 +1985,42 @@ function projectDeadline(project) {
             <div class="deadline-date">
 
                 <strong>
-                    ${project.target_date
-                        ? new Date(project.target_date).getDate()
-                        : "—"}
+                    ${day}
                 </strong>
 
                 <span>
-                    ${project.target_date
-                        ? new Date(project.target_date)
-                            .toLocaleDateString(
-                                "en-US",
-                                {month:"short"}
-                            )
-                            .toUpperCase()
-                        : ""}
+                    ${month}
                 </span>
 
             </div>
+
 
             <div class="deadline-info">
 
                 <strong>
-                    ${escapeHTML(project.name)}
+                    ${escapeHTML(
+                        project.name
+                    )}
                 </strong>
 
                 <span>
-                    ${escapeHTML(project.location || "No location")}
+                    ${escapeHTML(
+                        project.location ||
+                        "No location"
+                    )}
                 </span>
 
             </div>
 
-            <span class="status ${statusClass(project.status)}">
-                ${escapeHTML(project.status)}
+
+            <span class="status ${statusClass(
+                project.status
+            )}">
+
+                ${escapeHTML(
+                    project.status
+                )}
+
             </span>
 
         </div>
@@ -1448,29 +2030,34 @@ function projectDeadline(project) {
 
 
 /* =========================================================
-   PROJECT STATS
+   PROJECT STATISTICS
 ========================================================= */
 
-function updateProjectStats(projects) {
+function updateProjectStats(
+    projects
+) {
 
     const active =
         projects.filter(
-            p =>
-                p.status !== "Completed"
+            project =>
+                project.status !==
+                "Completed"
         ).length;
 
 
     const review =
         projects.filter(
-            p =>
-                p.status === "For Review"
+            project =>
+                project.status ===
+                "For Review"
         ).length;
 
 
     const completed =
         projects.filter(
-            p =>
-                p.status === "Completed"
+            project =>
+                project.status ===
+                "Completed"
         ).length;
 
 
@@ -1482,9 +2069,15 @@ function updateProjectStats(projects) {
         total
             ? Math.round(
                 projects.reduce(
-                    (sum, p) =>
+                    (
+                        sum,
+                        project
+                    ) =>
                         sum +
-                        Number(p.progress || 0),
+                        Number(
+                            project.progress ||
+                            0
+                        ),
                     0
                 ) / total
             )
@@ -1496,15 +2089,18 @@ function updateProjectStats(projects) {
         active
     );
 
+
     setText(
         "reviewProjectsCount",
         review
     );
 
+
     setText(
         "completedProjectsCount",
         completed
     );
+
 
     setText(
         "workspaceProgress",
@@ -1524,13 +2120,19 @@ function updateProjectStats(projects) {
    DELETE PROJECT
 ========================================================= */
 
-async function deleteProject(id) {
+async function deleteProject(
+    id
+) {
 
     if (
         !confirm(
             "Delete this project?"
         )
-    ) return;
+    ) {
+
+        return;
+
+    }
 
 
     const {
@@ -1562,12 +2164,14 @@ async function deleteProject(id) {
 
 
 /* =========================================================
-   DOCUMENTS
+   LOAD DOCUMENTS
 ========================================================= */
 
 async function loadDocuments() {
 
-    if (!currentUser) return;
+    if (!currentUser) {
+        return;
+    }
 
 
     const {
@@ -1587,11 +2191,12 @@ async function loadDocuments() {
     if (error) {
 
         console.error(
-            "Document error:",
+            "DOCUMENT ERROR:",
             error
         );
 
         return;
+
     }
 
 
@@ -1606,7 +2211,9 @@ async function loadDocuments() {
    RENDER DOCUMENTS
 ========================================================= */
 
-function renderDocuments(documents) {
+function renderDocuments(
+    documents
+) {
 
     const library =
         document.getElementById(
@@ -1618,14 +2225,24 @@ function renderDocuments(documents) {
 
         library.innerHTML =
             documents.length
-                ? documents.map(
-                    libraryItem
-                ).join("")
+                ? documents
+                    .map(libraryItem)
+                    .join("")
                 : `
                     <div class="empty-card">
-                        <div class="empty-icon">D</div>
-                        <h2>No documents</h2>
-                        <p>Upload your first document.</p>
+
+                        <div class="empty-icon">
+                            D
+                        </div>
+
+                        <h2>
+                            No documents
+                        </h2>
+
+                        <p>
+                            Upload your first document.
+                        </p>
+
                     </div>
                 `;
 
@@ -1670,9 +2287,7 @@ function renderDocuments(documents) {
         recent.innerHTML =
             documents
                 .slice(0, 5)
-                .map(
-                    recentFile
-                )
+                .map(recentFile)
                 .join("");
 
     }
@@ -1696,29 +2311,39 @@ function renderCategory(
         );
 
 
-    if (!container) return;
+    if (!container) {
+        return;
+    }
 
 
     const filtered =
         documents.filter(
-            doc =>
-                doc.project_name ===
+            document =>
+                document.project_name ===
                 category
         );
 
 
     container.innerHTML =
         filtered.length
-            ? filtered.map(
-                documentCard
-            ).join("")
+            ? filtered
+                .map(documentCard)
+                .join("")
             : `
                 <div class="empty-card">
-                    <div class="empty-icon">D</div>
-                    <h2>No documents</h2>
+
+                    <div class="empty-icon">
+                        D
+                    </div>
+
+                    <h2>
+                        No documents
+                    </h2>
+
                     <p>
                         Upload a document to this category.
                     </p>
+
                 </div>
             `;
 
@@ -1729,39 +2354,68 @@ function renderCategory(
    DOCUMENT CARD
 ========================================================= */
 
-function documentCard(document) {
+function documentCard(
+    document
+) {
 
     return `
         <div class="document-card">
 
             <div class="document-icon">
-                ${fileExtension(document.file_name)}
+
+                ${fileExtension(
+                    document.file_name
+                )}
+
             </div>
 
+
             <h3>
-                ${escapeHTML(document.title)}
+
+                ${escapeHTML(
+                    document.title
+                )}
+
             </h3>
 
+
             <p>
-                ${escapeHTML(document.file_name)}
+
+                ${escapeHTML(
+                    document.file_name
+                )}
+
             </p>
 
+
             <span>
-                ${formatBytes(document.size_bytes)}
+
+                ${formatBytes(
+                    document.size_bytes
+                )}
+
             </span>
 
-            <br><br>
+
+            <br>
+            <br>
+
 
             <button
                 class="button secondary"
                 onclick="openDocument('${document.id}')">
+
                 Open
+
             </button>
+
 
             <button
                 class="button secondary"
                 onclick="deleteDocument('${document.id}')">
+
                 Delete
+
             </button>
 
         </div>
@@ -1774,7 +2428,9 @@ function documentCard(document) {
    LIBRARY ITEM
 ========================================================= */
 
-function libraryItem(document) {
+function libraryItem(
+    document
+) {
 
     const type =
         fileExtension(
@@ -1785,35 +2441,56 @@ function libraryItem(document) {
     return `
         <div
             class="library-item"
-            data-type="${type}"
-        >
+            data-type="${type}">
 
             <div class="library-icon">
+
                 ${type}
+
             </div>
+
 
             <div>
 
                 <strong>
-                    ${escapeHTML(document.title)}
+
+                    ${escapeHTML(
+                        document.title
+                    )}
+
                 </strong>
 
+
                 <span>
-                    ${escapeHTML(document.file_name)}
+
+                    ${escapeHTML(
+                        document.file_name
+                    )}
+
                     ·
-                    ${formatBytes(document.size_bytes)}
+
+                    ${formatBytes(
+                        document.size_bytes
+                    )}
+
                 </span>
 
             </div>
 
+
             <button
                 onclick="openDocument('${document.id}')">
+
                 Open
+
             </button>
+
 
             <button
                 onclick="deleteDocument('${document.id}')">
+
                 Delete
+
             </button>
 
         </div>
@@ -1826,35 +2503,59 @@ function libraryItem(document) {
    RECENT FILE
 ========================================================= */
 
-function recentFile(document) {
+function recentFile(
+    document
+) {
 
     return `
         <div class="file-row">
 
             <div class="file-icon">
-                ${fileExtension(document.file_name)}
+
+                ${fileExtension(
+                    document.file_name
+                )}
+
             </div>
+
 
             <div class="file-info">
 
                 <strong>
-                    ${escapeHTML(document.title)}
+
+                    ${escapeHTML(
+                        document.title
+                    )}
+
                 </strong>
 
+
                 <span>
-                    ${formatBytes(document.size_bytes)}
+
+                    ${formatBytes(
+                        document.size_bytes
+                    )}
+
                 </span>
 
             </div>
 
+
             <span class="file-tag">
-                ${fileExtension(document.file_name)}
+
+                ${fileExtension(
+                    document.file_name
+                )}
+
             </span>
+
 
             <button
                 class="download"
                 onclick="openDocument('${document.id}')">
+
                 ↗
+
             </button>
 
         </div>
@@ -1867,63 +2568,71 @@ function recentFile(document) {
    OPEN DOCUMENT
 ========================================================= */
 
-async function openDocument(id) {
+async function openDocument(
+    id
+) {
 
-    const {
-        data: document,
-        error
-    } = await db
-        .from("documents")
-        .select("*")
-        .eq(
-            "id",
-            id
-        )
-        .single();
+    try {
+
+        const {
+            data: document,
+            error
+        } = await db
+            .from("documents")
+            .select("*")
+            .eq(
+                "id",
+                id
+            )
+            .single();
 
 
-    if (error) {
+        if (error) {
 
-        alert(
-            "Could not find document."
+            throw error;
+
+        }
+
+
+        const {
+            data,
+            error: storageError
+        } = await db
+            .storage
+            .from("documents")
+            .createSignedUrl(
+                document.file_path,
+                3600
+            );
+
+
+        if (storageError) {
+
+            throw storageError;
+
+        }
+
+
+        window.open(
+            data.signedUrl,
+            "_blank"
         );
 
-        return;
-    }
 
+    } catch (error) {
 
-    /*
-       Private bucket:
-       create temporary signed URL.
-    */
-
-    const {
-        data,
-        error: storageError
-    } = await db
-        .storage
-        .from("documents")
-        .createSignedUrl(
-            document.file_path,
-            3600
+        console.error(
+            "OPEN DOCUMENT ERROR:",
+            error
         );
 
-
-    if (storageError) {
 
         alert(
             "Could not open document:\n\n" +
-            storageError.message
+            error.message
         );
 
-        return;
     }
-
-
-    window.open(
-        data.signedUrl,
-        "_blank"
-    );
 
 }
 
@@ -1932,83 +2641,97 @@ async function openDocument(id) {
    DELETE DOCUMENT
 ========================================================= */
 
-async function deleteDocument(id) {
+async function deleteDocument(
+    id
+) {
 
     if (
         !confirm(
             "Delete this document?"
         )
-    ) return;
+    ) {
+
+        return;
+
+    }
 
 
-    const {
-        data: document,
-        error
-    } = await db
-        .from("documents")
-        .select(
-            "file_path"
-        )
-        .eq(
-            "id",
-            id
-        )
-        .single();
+    try {
+
+        const {
+            data: document,
+            error
+        } = await db
+            .from("documents")
+            .select(
+                "file_path"
+            )
+            .eq(
+                "id",
+                id
+            )
+            .single();
 
 
-    if (error) {
+        if (error) {
+
+            throw error;
+
+        }
+
+
+        const {
+            error: storageError
+        } = await db
+            .storage
+            .from("documents")
+            .remove([
+                document.file_path
+            ]);
+
+
+        if (storageError) {
+
+            throw storageError;
+
+        }
+
+
+        const {
+            error: databaseError
+        } = await db
+            .from("documents")
+            .delete()
+            .eq(
+                "id",
+                id
+            );
+
+
+        if (databaseError) {
+
+            throw databaseError;
+
+        }
+
+
+        await refreshAll();
+
+
+    } catch (error) {
+
+        console.error(
+            "DELETE DOCUMENT ERROR:",
+            error
+        );
+
 
         alert(
+            "Could not delete document:\n\n" +
             error.message
         );
 
-        return;
     }
-
-
-    const {
-        error: storageError
-    } = await db
-        .storage
-        .from("documents")
-        .remove([
-            document.file_path
-        ]);
-
-
-    if (storageError) {
-
-        alert(
-            "Could not delete file:\n\n" +
-            storageError.message
-        );
-
-        return;
-    }
-
-
-    const {
-        error: databaseError
-    } = await db
-        .from("documents")
-        .delete()
-        .eq(
-            "id",
-            id
-        );
-
-
-    if (databaseError) {
-
-        alert(
-            databaseError.message
-        );
-
-        return;
-    }
-
-
-    await refreshAll();
 
 }
 
@@ -2031,6 +2754,14 @@ function filterLibrary() {
         );
 
 
+    if (!searchInput ||
+        !typeFilter) {
+
+        return;
+
+    }
+
+
     const search =
         searchInput.value
             .toLowerCase()
@@ -2047,33 +2778,37 @@ function filterLibrary() {
         );
 
 
-    items.forEach(item => {
+    items.forEach(
+        item => {
 
-        const text =
-            item.innerText
-                .toLowerCase();
-
-
-        const itemType =
-            item.dataset.type;
+            const text =
+                item.innerText
+                    .toLowerCase();
 
 
-        const matchesSearch =
-            text.includes(search);
+            const itemType =
+                item.dataset.type;
 
 
-        const matchesType =
-            type === "all" ||
-            itemType === type;
+            const matchesSearch =
+                text.includes(
+                    search
+                );
 
 
-        item.style.display =
-            matchesSearch &&
-            matchesType
-                ? "flex"
-                : "none";
+            const matchesType =
+                type === "all" ||
+                itemType === type;
 
-    });
+
+            item.style.display =
+                matchesSearch &&
+                matchesType
+                    ? "flex"
+                    : "none";
+
+        }
+    );
 
 }
 
@@ -2098,11 +2833,12 @@ async function loadTeam() {
     if (error) {
 
         console.error(
-            "Team error:",
+            "TEAM ERROR:",
             error
         );
 
         return;
+
     }
 
 
@@ -2112,20 +2848,22 @@ async function loadTeam() {
         );
 
 
-    if (!container) return;
+    if (!container) {
+        return;
+    }
 
 
     container.innerHTML =
         (data || [])
-            .map(
-                teamMember
-            )
+            .map(teamMember)
             .join("");
 
 }
 
 
-function teamMember(member) {
+function teamMember(
+    member
+) {
 
     const name =
         member.full_name ||
@@ -2136,15 +2874,28 @@ function teamMember(member) {
         <div class="team-card">
 
             <div class="team-avatar">
+
                 ${getInitials(name)}
+
             </div>
 
+
             <h3>
-                ${escapeHTML(name)}
+
+                ${escapeHTML(
+                    name
+                )}
+
             </h3>
 
+
             <p>
-                ${escapeHTML(member.position || "Member")}
+
+                ${escapeHTML(
+                    member.position ||
+                    "Member"
+                )}
+
             </p>
 
         </div>
@@ -2195,27 +2946,34 @@ function setText(
 }
 
 
-function escapeHTML(value) {
+function escapeHTML(
+    value
+) {
 
     return String(
         value ?? ""
     )
+
         .replace(
             /&/g,
             "&amp;"
         )
+
         .replace(
             /</g,
             "&lt;"
         )
+
         .replace(
             />/g,
             "&gt;"
         )
+
         .replace(
             /"/g,
             "&quot;"
         )
+
         .replace(
             /'/g,
             "&#039;"
@@ -2224,7 +2982,9 @@ function escapeHTML(value) {
 }
 
 
-function statusClass(status) {
+function statusClass(
+    status
+) {
 
     switch (status) {
 
@@ -2248,45 +3008,56 @@ function statusClass(status) {
 }
 
 
-function fileExtension(filename) {
+function fileExtension(
+    filename
+) {
 
     const ext =
-        filename
+        String(filename || "")
             .split(".")
             .pop()
             .toUpperCase();
 
 
-    if (ext === "XLS")
+    if (ext === "XLS") {
         return "XLSX";
+    }
 
-    if (ext === "DOC")
+
+    if (ext === "DOC") {
         return "DOCX";
+    }
 
-    return ext;
+
+    return ext || "FILE";
 
 }
 
 
-function formatBytes(bytes) {
+function formatBytes(
+    bytes
+) {
 
-    if (!bytes)
+    if (!bytes) {
         return "0 KB";
+    }
 
 
-    const units =
-        [
-            "Bytes",
-            "KB",
-            "MB",
-            "GB"
-        ];
+    const units = [
+        "Bytes",
+        "KB",
+        "MB",
+        "GB"
+    ];
 
 
     const index =
-        Math.floor(
-            Math.log(bytes) /
-            Math.log(1024)
+        Math.min(
+            Math.floor(
+                Math.log(bytes) /
+                Math.log(1024)
+            ),
+            units.length - 1
         );
 
 
@@ -2308,32 +3079,44 @@ function formatBytes(bytes) {
 
 
 /* =========================================================
-   SIDEBAR LINKS
+   SIDEBAR NAVIGATION
 ========================================================= */
 
-document
-    .querySelectorAll(".nav-item")
-    .forEach(item => {
+function setupNavigation() {
 
-        item.addEventListener(
-            "click",
-            function (event) {
+    document
+        .querySelectorAll(
+            ".nav-item"
+        )
+        .forEach(
+            item => {
 
-                event.preventDefault();
+                item.addEventListener(
+                    "click",
+                    function (event) {
 
-                const page =
-                    this.dataset.page;
+                        event.preventDefault();
 
-                if (page) {
 
-                    showPage(page);
+                        const page =
+                            this.dataset.page;
 
-                }
+
+                        if (page) {
+
+                            showPage(
+                                page
+                            );
+
+                        }
+
+                    }
+                );
 
             }
         );
 
-    });
+}
 
 
 /* =========================================================
@@ -2344,9 +3127,18 @@ document.addEventListener(
     "keydown",
     function (event) {
 
+        const modal =
+            document.getElementById(
+                "modal"
+            );
+
+
         if (
             event.key === "Escape" &&
-            modal.classList.contains("open")
+            modal &&
+            modal.classList.contains(
+                "open"
+            )
         ) {
 
             closeModal();
@@ -2358,64 +3150,43 @@ document.addEventListener(
 
 
 /* =========================================================
-   AUTH EVENTS
+   AUTH EVENT SETUP
 ========================================================= */
 
-document
-    .getElementById("loginForm")
-    .addEventListener(
-        "submit",
-        loginUser
-    );
+function setupAuthForms() {
+
+    const loginForm =
+        document.getElementById(
+            "loginForm"
+        );
 
 
-document
-    .getElementById("registerForm")
-    .addEventListener(
-        "submit",
-        registerUser
-    );
+    const registerForm =
+        document.getElementById(
+            "registerForm"
+        );
 
 
-/* =========================================================
-   INITIALIZE
-========================================================= */
+    if (loginForm) {
 
-document.addEventListener(
-    "DOMContentLoaded",
-    async function () {
-
-        const {
-            data: {
-                session
-            }
-        } =
-            await db.auth.getSession();
-
-
-        if (session) {
-
-            await loadApplication();
-
-        } else {
-
-            document
-                .getElementById(
-                    "authScreen"
-                )
-                .style.display = "flex";
-
-
-            document
-                .getElementById(
-                    "app"
-                )
-                .style.display = "none";
-
-        }
+        loginForm.addEventListener(
+            "submit",
+            loginUser
+        );
 
     }
-);
+
+
+    if (registerForm) {
+
+        registerForm.addEventListener(
+            "submit",
+            registerUser
+        );
+
+    }
+
+}
 
 
 /* =========================================================
@@ -2423,7 +3194,16 @@ document.addEventListener(
 ========================================================= */
 
 db.auth.onAuthStateChange(
-    async (event, session) => {
+    async (
+        event,
+        session
+    ) => {
+
+        console.log(
+            "Supabase Auth:",
+            event
+        );
+
 
         if (
             event === "SIGNED_IN" &&
@@ -2440,10 +3220,133 @@ db.auth.onAuthStateChange(
             event === "SIGNED_OUT"
         ) {
 
-            currentUser = null;
-            currentProfile = null;
+            currentUser =
+                null;
+
+            currentProfile =
+                null;
 
         }
 
     }
 );
+
+
+/* =========================================================
+   INITIALIZE
+========================================================= */
+
+async function initializePDSHub() {
+
+    console.log(
+        "PDS Hub initializing..."
+    );
+
+
+    setupAuthForms();
+
+    setupModalForm();
+
+    setupNavigation();
+
+    setupGlobalSearch();
+
+
+    try {
+
+        const {
+            data,
+            error
+        } = await db.auth.getSession();
+
+
+        if (error) {
+
+            console.error(
+                "SESSION ERROR:",
+                error
+            );
+
+            showLogin();
+
+            return;
+
+        }
+
+
+        if (data?.session) {
+
+            currentUser =
+                data.session.user;
+
+
+            await loadApplication();
+
+        } else {
+
+            const authScreen =
+                document.getElementById(
+                    "authScreen"
+                );
+
+
+            const app =
+                document.getElementById(
+                    "app"
+                );
+
+
+            if (authScreen) {
+
+                authScreen.style.display =
+                    "flex";
+
+            }
+
+
+            if (app) {
+
+                app.style.display =
+                    "none";
+
+            }
+
+
+            showLogin();
+
+        }
+
+    } catch (error) {
+
+        console.error(
+            "INITIALIZATION ERROR:",
+            error
+        );
+
+
+        showLogin();
+
+    }
+
+}
+
+
+/* =========================================================
+   START
+========================================================= */
+
+if (
+    document.readyState ===
+    "loading"
+) {
+
+    document.addEventListener(
+        "DOMContentLoaded",
+        initializePDSHub
+    );
+
+} else {
+
+    initializePDSHub();
+
+}
