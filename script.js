@@ -1,17 +1,12 @@
 /* =========================================================
-   PDS HUB — SUPABASE CONNECTED VERSION
+   PDS HUB
+   Supabase + GitHub Pages
    ========================================================= */
 
-/* =========================================================
-   SUPABASE CONFIG
-========================================================= */
-
 const SUPABASE_URL = "https://zvwghoabsqfyakbqzhil.supabase.co";
+const SUPABASE_KEY = "sb_publishable_oJ3Zc3TplfYgePQEmTrJ8Q_qycxR0jQ";
 
-const SUPABASE_KEY =
-    "sb_publishable_oJ3Zc3TplfYgePQEmTrJ8Q_qycxR0jQ";
-
-const { createClient } = supabase;
+const { createClient } = window.supabase;
 
 const db = createClient(
     SUPABASE_URL,
@@ -25,7 +20,7 @@ const db = createClient(
 
 let currentUser = null;
 let currentProfile = null;
-let currentModalMode = "project";
+let modalMode = "project";
 
 
 /* =========================================================
@@ -52,188 +47,127 @@ function showRegister() {
 
 function clearAuthMessages() {
 
-    const loginMessage =
-        document.getElementById("loginMessage");
+    const loginMessage = document.getElementById("loginMessage");
+    const registerMessage = document.getElementById("registerMessage");
 
-    const registerMessage =
-        document.getElementById("registerMessage");
-
-    if (loginMessage) {
-        loginMessage.textContent = "";
-    }
-
-    if (registerMessage) {
-        registerMessage.textContent = "";
-    }
+    if (loginMessage) loginMessage.textContent = "";
+    if (registerMessage) registerMessage.textContent = "";
 }
 
 
 /* =========================================================
-   SIGN IN
+   AUTH MESSAGE
 ========================================================= */
 
-const loginForm =
-    document.getElementById("loginForm");
+function authMessage(elementId, message, success = false) {
 
-if (loginForm) {
+    const el = document.getElementById(elementId);
 
-    loginForm.addEventListener("submit", async function(event) {
+    if (!el) return;
 
-        event.preventDefault();
+    el.textContent = message;
 
-        const email =
-            document.getElementById("loginEmail").value.trim();
-
-        const password =
-            document.getElementById("loginPassword").value;
-
-        const message =
-            document.getElementById("loginMessage");
-
-        message.textContent = "Signing in...";
-
-        const { data, error } =
-            await db.auth.signInWithPassword({
-                email: email,
-                password: password
-            });
-
-        if (error) {
-
-            console.error(error);
-
-            message.textContent =
-                error.message;
-
-            return;
-        }
-
-        currentUser = data.user;
-
-        message.textContent =
-            "Login successful.";
-
-        await initializeApplication();
-
-    });
-
+    el.style.color = success
+        ? "#1d5b45"
+        : "#b34b42";
 }
 
 
 /* =========================================================
-   CREATE ACCOUNT
+   SIGN UP
 ========================================================= */
 
-const registerForm =
-    document.getElementById("registerForm");
+async function registerUser(event) {
 
-if (registerForm) {
+    event.preventDefault();
 
-    registerForm.addEventListener("submit", async function(event) {
+    const name =
+        document.getElementById("registerName").value.trim();
 
-        event.preventDefault();
+    const position =
+        document.getElementById("registerPosition").value.trim();
 
-        const name =
-            document.getElementById("registerName").value.trim();
+    const email =
+        document.getElementById("registerEmail").value.trim();
 
-        const position =
-            document.getElementById("registerPosition").value.trim();
+    const password =
+        document.getElementById("registerPassword").value;
 
-        const email =
-            document.getElementById("registerEmail").value.trim();
-
-        const password =
-            document.getElementById("registerPassword").value;
-
-        const confirmPassword =
-            document.getElementById("registerConfirm").value;
-
-        const message =
-            document.getElementById("registerMessage");
+    const confirm =
+        document.getElementById("registerConfirm").value;
 
 
-        if (password !== confirmPassword) {
+    if (password !== confirm) {
 
-            message.textContent =
-                "Passwords do not match.";
+        authMessage(
+            "registerMessage",
+            "Passwords do not match."
+        );
 
-            return;
-        }
-
-
-        if (password.length < 6) {
-
-            message.textContent =
-                "Password must contain at least 6 characters.";
-
-            return;
-        }
+        return;
+    }
 
 
-        message.textContent =
-            "Creating account...";
+    authMessage(
+        "registerMessage",
+        "Creating account..."
+    );
 
 
-        const { data, error } =
-            await db.auth.signUp({
+    const { data, error } =
+        await db.auth.signUp({
 
-                email: email,
+            email: email,
 
-                password: password,
+            password: password,
 
-                options: {
+            options: {
 
-                    data: {
-                        full_name: name,
-                        position: position
-                    }
-
+                data: {
+                    full_name: name,
+                    position: position
                 }
 
-            });
+            }
+
+        });
 
 
-        if (error) {
+    if (error) {
 
-            console.error(error);
+        authMessage(
+            "registerMessage",
+            error.message
+        );
 
-            message.textContent =
-                error.message;
-
-            return;
-        }
+        return;
+    }
 
 
-        /*
-         * If email confirmation is disabled,
-         * Supabase immediately provides a session.
-         */
+    /*
+       Create profile if session already exists.
+       If email confirmation is enabled, the profile
+       will be created by the database trigger if available.
+    */
 
-        if (data.user && data.session) {
+    if (data.user && data.session) {
 
-            currentUser = data.user;
+        await createProfile(
+            data.user,
+            name,
+            position
+        );
+    }
 
-            await createProfile(
-                data.user.id,
-                name,
-                position
-            );
 
-            message.textContent =
-                "Account created successfully.";
+    authMessage(
+        "registerMessage",
+        "Account created successfully. Check your email if confirmation is required.",
+        true
+    );
 
-            await initializeApplication();
 
-        } else {
-
-            message.textContent =
-                "Account created. Please check your email to confirm your account.";
-
-            showLogin();
-
-        }
-
-    });
+    document.getElementById("registerForm").reset();
 
 }
 
@@ -242,28 +176,28 @@ if (registerForm) {
    CREATE PROFILE
 ========================================================= */
 
-async function createProfile(
-    userId,
-    fullName,
-    position
-) {
+async function createProfile(user, name, position) {
 
-    const { data, error } =
-        await db
-            .from("profiles")
-            .upsert(
-                {
-                    id: userId,
-                    full_name: fullName,
-                    position: position,
-                    role: "member"
-                },
-                {
-                    onConflict: "id"
-                }
-            )
-            .select()
-            .single();
+    if (!user) return;
+
+
+    const { error } = await db
+        .from("profiles")
+        .upsert({
+
+            id: user.id,
+
+            full_name: name || user.email,
+
+            position: position || "",
+
+            role: "member"
+
+        }, {
+
+            onConflict: "id"
+
+        });
 
 
     if (error) {
@@ -273,74 +207,140 @@ async function createProfile(
             error
         );
 
-        return null;
     }
 
-
-    currentProfile = data;
-
-    return data;
 }
 
 
 /* =========================================================
-   INITIALIZE APPLICATION
+   SIGN IN
 ========================================================= */
 
-async function initializeApplication() {
+async function loginUser(event) {
 
-    const {
-        data: {
-            session
-        }
-    } = await db.auth.getSession();
+    event.preventDefault();
 
 
-    if (!session) {
+    const email =
+        document.getElementById("loginEmail").value.trim();
 
-        showAuthScreen();
+    const password =
+        document.getElementById("loginPassword").value;
+
+
+    authMessage(
+        "loginMessage",
+        "Signing in..."
+    );
+
+
+    const { data, error } =
+        await db.auth.signInWithPassword({
+
+            email: email,
+
+            password: password
+
+        });
+
+
+    if (error) {
+
+        authMessage(
+            "loginMessage",
+            error.message
+        );
 
         return;
     }
 
 
-    currentUser = session.user;
+    currentUser = data.user;
+
+    await loadApplication();
+
+
+    document.getElementById("loginForm").reset();
+
+}
+
+
+/* =========================================================
+   SIGN OUT
+========================================================= */
+
+async function signOut() {
+
+    await db.auth.signOut();
+
+    currentUser = null;
+    currentProfile = null;
+
+    document.getElementById("app").style.display = "none";
+    document.getElementById("authScreen").style.display = "flex";
+
+    showLogin();
+
+}
+
+
+/* =========================================================
+   LOAD APPLICATION
+========================================================= */
+
+async function loadApplication() {
+
+    const {
+        data: {
+            user
+        }
+    } = await db.auth.getUser();
+
+
+    if (!user) {
+
+        document.getElementById("authScreen").style.display = "flex";
+        document.getElementById("app").style.display = "none";
+
+        return;
+    }
+
+
+    currentUser = user;
 
 
     await loadProfile();
 
-    hideAuthScreen();
+
+    document.getElementById("authScreen").style.display = "none";
+    document.getElementById("app").style.display = "flex";
+
 
     updateUserInterface();
 
-    await loadDashboard();
 
-    await loadProjects();
+    await refreshAll();
 
-    await loadDocuments();
 
-    await loadTeam();
+    showPage("overview");
 
 }
 
 
 /* =========================================================
-   LOAD PROFILE
+   PROFILE
 ========================================================= */
 
 async function loadProfile() {
 
-    if (!currentUser) {
-        return;
-    }
+    if (!currentUser) return;
 
 
-    const { data, error } =
-        await db
-            .from("profiles")
-            .select("*")
-            .eq("id", currentUser.id)
-            .maybeSingle();
+    const { data, error } = await db
+        .from("profiles")
+        .select("*")
+        .eq("id", currentUser.id)
+        .maybeSingle();
 
 
     if (error) {
@@ -354,78 +354,44 @@ async function loadProfile() {
     }
 
 
-    if (!data) {
+    if (data) {
 
-        currentProfile =
-            await createProfile(
-                currentUser.id,
-                currentUser.user_metadata?.full_name ||
-                    currentUser.email?.split("@")[0] ||
-                    "User",
-                currentUser.user_metadata?.position ||
-                    "Member"
-            );
+        currentProfile = data;
 
-        return;
-    }
+    } else {
+
+        await createProfile(
+            currentUser,
+            currentUser.user_metadata?.full_name || "",
+            currentUser.user_metadata?.position || ""
+        );
 
 
-    currentProfile = data;
-}
+        const { data: profile } = await db
+            .from("profiles")
+            .select("*")
+            .eq("id", currentUser.id)
+            .maybeSingle();
 
 
-/* =========================================================
-   AUTH UI
-========================================================= */
+        currentProfile = profile;
 
-function showAuthScreen() {
-
-    const authScreen =
-        document.getElementById("authScreen");
-
-    const app =
-        document.getElementById("app");
-
-    if (authScreen) {
-        authScreen.style.display = "flex";
-    }
-
-    if (app) {
-        app.style.display = "none";
-    }
-
-}
-
-
-function hideAuthScreen() {
-
-    const authScreen =
-        document.getElementById("authScreen");
-
-    const app =
-        document.getElementById("app");
-
-    if (authScreen) {
-        authScreen.style.display = "none";
-    }
-
-    if (app) {
-        app.style.display = "flex";
     }
 
 }
 
 
 /* =========================================================
-   UPDATE USER INFORMATION
+   UPDATE USER INTERFACE
 ========================================================= */
 
 function updateUserInterface() {
 
     const name =
         currentProfile?.full_name ||
-        currentUser?.email?.split("@")[0] ||
+        currentUser?.email ||
         "User";
+
 
     const position =
         currentProfile?.position ||
@@ -452,25 +418,24 @@ function updateUserInterface() {
         document.getElementById("topAvatar");
 
 
-    if (welcomeName) {
-        welcomeName.textContent = name;
-    }
+    if (welcomeName)
+        welcomeName.textContent = name.split(" ")[0];
 
-    if (sidebarName) {
+
+    if (sidebarName)
         sidebarName.textContent = name;
-    }
 
-    if (sidebarPosition) {
+
+    if (sidebarPosition)
         sidebarPosition.textContent = position;
-    }
 
-    if (sidebarAvatar) {
+
+    if (sidebarAvatar)
         sidebarAvatar.textContent = initials;
-    }
 
-    if (topAvatar) {
+
+    if (topAvatar)
         topAvatar.textContent = initials;
-    }
 
 }
 
@@ -481,87 +446,11 @@ function getInitials(name) {
         .split(" ")
         .filter(Boolean)
         .slice(0, 2)
-        .map(word => word.charAt(0))
+        .map(word => word[0])
         .join("")
-        .toUpperCase();
+        .toUpperCase() || "U";
 
 }
-
-
-/* =========================================================
-   SIGN OUT
-========================================================= */
-
-async function signOut() {
-
-    const { error } =
-        await db.auth.signOut();
-
-
-    if (error) {
-
-        console.error(error);
-
-        alert(error.message);
-
-        return;
-    }
-
-
-    currentUser = null;
-
-    currentProfile = null;
-
-    showAuthScreen();
-
-    showLogin();
-
-}
-
-
-/* =========================================================
-   SESSION LISTENER
-========================================================= */
-
-db.auth.onAuthStateChange(
-    async function(event, session) {
-
-        console.log(
-            "Auth event:",
-            event
-        );
-
-
-        if (session) {
-
-            currentUser = session.user;
-
-            /*
-             * Avoid repeatedly rebuilding the application
-             * during token refresh.
-             */
-
-            if (
-                event === "SIGNED_IN" ||
-                event === "INITIAL_SESSION"
-            ) {
-
-                await initializeApplication();
-
-            }
-
-        } else {
-
-            currentUser = null;
-
-            currentProfile = null;
-
-            showAuthScreen();
-
-        }
-
-    }
-);
 
 
 /* =========================================================
@@ -579,9 +468,7 @@ function showPage(pageId) {
 
     pages.forEach(page => {
 
-        page.classList.remove(
-            "active-page"
-        );
+        page.classList.remove("active-page");
 
     });
 
@@ -592,27 +479,19 @@ function showPage(pageId) {
 
     if (selectedPage) {
 
-        selectedPage.classList.add(
-            "active-page"
-        );
+        selectedPage.classList.add("active-page");
 
     }
 
 
     navItems.forEach(item => {
 
-        item.classList.remove(
-            "active"
-        );
+        item.classList.remove("active");
 
 
-        if (
-            item.dataset.page === pageId
-        ) {
+        if (item.dataset.page === pageId) {
 
-            item.classList.add(
-                "active"
-            );
+            item.classList.add("active");
 
         }
 
@@ -628,35 +507,6 @@ function showPage(pageId) {
 
 
 /* =========================================================
-   SIDEBAR NAVIGATION
-========================================================= */
-
-document
-    .querySelectorAll(".nav-item")
-    .forEach(item => {
-
-        item.addEventListener(
-            "click",
-            function(event) {
-
-                event.preventDefault();
-
-                const page =
-                    this.dataset.page;
-
-                if (page) {
-
-                    showPage(page);
-
-                }
-
-            }
-        );
-
-    });
-
-
-/* =========================================================
    GLOBAL SEARCH
 ========================================================= */
 
@@ -668,15 +518,16 @@ if (globalSearch) {
 
     globalSearch.addEventListener(
         "input",
-        function() {
+        function () {
 
             const search =
-                this.value
-                    .toLowerCase()
-                    .trim();
+                this.value.toLowerCase().trim();
 
 
             if (!search) {
+
+                showPage("overview");
+
                 return;
             }
 
@@ -685,18 +536,21 @@ if (globalSearch) {
                 document.querySelectorAll(".page");
 
 
+            let found = false;
+
+
             pages.forEach(page => {
 
-                const text =
-                    page.innerText
-                        .toLowerCase();
-
-
                 if (
-                    text.includes(search)
+                    !found &&
+                    page.innerText
+                        .toLowerCase()
+                        .includes(search)
                 ) {
 
                     showPage(page.id);
+
+                    found = true;
 
                 }
 
@@ -714,11 +568,10 @@ if (globalSearch) {
 
 document.addEventListener(
     "keydown",
-    function(event) {
+    function (event) {
 
         if (
-            (event.ctrlKey ||
-                event.metaKey) &&
+            (event.ctrlKey || event.metaKey) &&
             event.key.toLowerCase() === "k"
         ) {
 
@@ -735,15 +588,12 @@ document.addEventListener(
 function focusSearch() {
 
     const search =
-        document.getElementById(
-            "globalSearch"
-        );
+        document.getElementById("globalSearch");
 
 
     if (search) {
 
         search.focus();
-
         search.select();
 
     }
@@ -752,1033 +602,198 @@ function focusSearch() {
 
 
 /* =========================================================
-   PROJECT MODAL
+   MODAL
 ========================================================= */
 
-function openProjectModal() {
+const modal =
+    document.getElementById("modal");
 
-    currentModalMode =
-        "project";
 
+function openModal(
+    title,
+    description
+) {
 
     document.getElementById(
         "modalTitle"
-    ).textContent =
-        "New project";
+    ).textContent = title;
 
 
     document.getElementById(
         "modalDescription"
-    ).textContent =
-        "Create a new project for monitoring.";
+    ).textContent = description;
 
 
-    document.getElementById(
-        "projectFields"
-    ).style.display =
-        "block";
-
-
-    document.getElementById(
-        "uploadFields"
-    ).style.display =
-        "none";
-
-
-    document.getElementById(
-        "modalSubmitButton"
-    ).textContent =
-        "Create Project";
-
-
-    document.getElementById(
-        "modal"
-    ).classList.add("open");
+    modal.classList.add("open");
 
 }
 
-
-/* =========================================================
-   UPDATE MODAL
-========================================================= */
-
-function openUpdateModal() {
-
-    currentModalMode =
-        "update";
-
-
-    document.getElementById(
-        "modalTitle"
-    ).textContent =
-        "New update";
-
-
-    document.getElementById(
-        "modalDescription"
-    ).textContent =
-        "Add an update to your PDS Hub workspace.";
-
-
-    document.getElementById(
-        "projectFields"
-    ).style.display =
-        "none";
-
-
-    document.getElementById(
-        "uploadFields"
-    ).style.display =
-        "block";
-
-
-    document.getElementById(
-        "documentTitle"
-    ).value =
-        "";
-
-
-    document.getElementById(
-        "documentCategory"
-    ).value =
-        "General";
-
-
-    document.getElementById(
-        "modalSubmitButton"
-    ).textContent =
-        "Save Update";
-
-
-    document.getElementById(
-        "modal"
-    ).classList.add("open");
-
-}
-
-
-/* =========================================================
-   UPLOAD MODAL
-========================================================= */
-
-function openUploadModal(category = "General") {
-
-    currentModalMode =
-        "upload";
-
-
-    document.getElementById(
-        "modalTitle"
-    ).textContent =
-        "Upload document";
-
-
-    document.getElementById(
-        "modalDescription"
-    ).textContent =
-        "Add a document to your PDS Hub library.";
-
-
-    document.getElementById(
-        "projectFields"
-    ).style.display =
-        "none";
-
-
-    document.getElementById(
-        "uploadFields"
-    ).style.display =
-        "block";
-
-
-    document.getElementById(
-        "documentCategory"
-    ).value =
-        category;
-
-
-    document.getElementById(
-        "modalSubmitButton"
-    ).textContent =
-        "Upload";
-
-
-    document.getElementById(
-        "modal"
-    ).classList.add("open");
-
-}
-
-
-/* =========================================================
-   CLOSE MODAL
-========================================================= */
 
 function closeModal() {
 
-    const modal =
-        document.getElementById("modal");
+    modal.classList.remove("open");
 
-
-    if (modal) {
-
-        modal.classList.remove(
-            "open"
-        );
-
-    }
-
-
-    const form =
-        document.getElementById(
-            "modalForm"
-        );
-
-
-    if (form) {
-        form.reset();
-    }
+    document
+        .getElementById("modalForm")
+        .reset();
 
 }
 
 
-/* =========================================================
-   MODAL SUBMIT
-========================================================= */
+function openProjectModal() {
 
-const modalForm =
-    document.getElementById("modalForm");
+    modalMode = "project";
 
 
-if (modalForm) {
-
-    modalForm.addEventListener(
-        "submit",
-        async function(event) {
-
-            event.preventDefault();
+    document.getElementById(
+        "projectFields"
+    ).style.display = "block";
 
 
-            if (!currentUser) {
-
-                alert(
-                    "Please sign in first."
-                );
-
-                return;
-
-            }
+    document.getElementById(
+        "uploadFields"
+    ).style.display = "none";
 
 
-            if (
-                currentModalMode === "project"
-            ) {
+    openModal(
+        "New project",
+        "Create a new project for monitoring."
+    );
 
-                await createProject();
-
-            }
+}
 
 
-            if (
-                currentModalMode === "upload" ||
-                currentModalMode === "update"
-            ) {
+function openUploadModal(category = "General") {
 
-                await uploadDocument();
+    modalMode = "upload";
 
-            }
 
-        }
+    document.getElementById(
+        "projectFields"
+    ).style.display = "none";
+
+
+    document.getElementById(
+        "uploadFields"
+    ).style.display = "block";
+
+
+    document.getElementById(
+        "documentCategory"
+    ).value = category;
+
+
+    openModal(
+        "Upload document",
+        "Upload a PDF, Excel, or Word document."
     );
 
 }
 
 
 /* =========================================================
-   CREATE PROJECT
+   SAVE PROJECT
 ========================================================= */
 
-async function createProject() {
+async function saveProject() {
 
-    const code =
-        document.getElementById(
-            "projectCode"
-        ).value.trim();
+    if (!currentUser) return;
 
 
-    const name =
-        document.getElementById(
-            "projectName"
-        ).value.trim();
+    const project = {
 
+        owner_id: currentUser.id,
 
-    const location =
-        document.getElementById(
-            "projectLocation"
-        ).value.trim();
-
-
-    const status =
-        document.getElementById(
-            "projectStatus"
-        ).value;
-
-
-    const progress =
-        Number(
+        project_code:
             document.getElementById(
-                "projectProgress"
-            ).value || 0
-        );
+                "projectCode"
+            ).value.trim() || null,
+
+        name:
+            document.getElementById(
+                "projectName"
+            ).value.trim(),
+
+        location:
+            document.getElementById(
+                "projectLocation"
+            ).value.trim() || null,
+
+        status:
+            document.getElementById(
+                "projectStatus"
+            ).value,
+
+        target_date:
+            document.getElementById(
+                "projectTargetDate"
+            ).value || null,
+
+        notes:
+            document.getElementById(
+                "projectNotes"
+            ).value.trim() || null
+
+    };
 
 
-    const targetDate =
-        document.getElementById(
-            "projectTargetDate"
-        ).value ||
-        null;
+    if (!project.name) {
 
-
-    const notes =
-        document.getElementById(
-            "projectNotes"
-        ).value.trim();
-
-
-    if (!name) {
-
-        alert(
-            "Project name is required."
-        );
+        alert("Please enter a project name.");
 
         return;
-
     }
 
 
-    /*
-     * Your database currently does NOT
-     * have a progress column.
-     *
-     * Therefore progress is stored
-     * inside notes temporarily.
-     */
-
-    let finalNotes = notes;
-
-    if (progress > 0) {
-
-        finalNotes =
-            `[Progress: ${progress}%] ${notes}`;
-
-    }
-
-
-    const {
-        data,
-        error
-    } =
+    const { error } =
         await db
             .from("projects")
-            .insert({
-
-                owner_id:
-                    currentUser.id,
-
-                project_code:
-                    code || null,
-
-                name:
-                    name,
-
-                location:
-                    location || null,
-
-                status:
-                    status,
-
-                target_date:
-                    targetDate,
-
-                notes:
-                    finalNotes || null
-
-            })
-            .select()
-            .single();
+            .insert(project);
 
 
     if (error) {
 
-        console.error(
-            "Project creation error:",
-            error
-        );
-
+        console.error(error);
 
         alert(
-            "Unable to create project:\n\n" +
+            "Could not save project:\n\n" +
             error.message
         );
 
-
         return;
-
     }
-
-
-    alert(
-        "Project created successfully."
-    );
 
 
     closeModal();
 
-    await loadProjects();
 
-    await loadDashboard();
-
-}
+    await refreshAll();
 
 
-/* =========================================================
-   LOAD PROJECTS
-========================================================= */
-
-async function loadProjects() {
-
-    if (!currentUser) {
-        return;
-    }
-
-
-    const {
-        data,
-        error
-    } =
-        await db
-            .from("projects")
-            .select("*")
-            .eq(
-                "owner_id",
-                currentUser.id
-            )
-            .order(
-                "created_at",
-                {
-                    ascending: false
-                }
-            );
-
-
-    if (error) {
-
-        console.error(
-            "Projects loading error:",
-            error
-        );
-
-        return;
-
-    }
-
-
-    renderProjects(
-        data || []
-    );
+    showPage("projects");
 
 }
 
 
 /* =========================================================
-   RENDER PROJECTS
-========================================================= */
-
-function renderProjects(projects) {
-
-    const projectList =
-        document.getElementById(
-            "projectList"
-        );
-
-
-    const myProjectList =
-        document.getElementById(
-            "myProjectList"
-        );
-
-
-    const overviewProjects =
-        document.getElementById(
-            "overviewProjects"
-        );
-
-
-    if (projectList) {
-
-        if (!projects.length) {
-
-            projectList.innerHTML = `
-                <div class="empty-card">
-                    <div class="empty-icon">◫</div>
-                    <h2>No projects yet</h2>
-                    <p>Create your first project.</p>
-                    <button
-                        class="button primary"
-                        onclick="openProjectModal()"
-                    >
-                        + New Project
-                    </button>
-                </div>
-            `;
-
-        } else {
-
-            projectList.innerHTML =
-                projects
-                    .map(project =>
-                        projectRow(project)
-                    )
-                    .join("");
-
-        }
-
-    }
-
-
-    if (myProjectList) {
-
-        if (!projects.length) {
-
-            myProjectList.innerHTML = `
-                <div class="empty-card">
-                    <div class="empty-icon">✓</div>
-                    <h2>No projects yet</h2>
-                    <p>Your projects will appear here.</p>
-                </div>
-            `;
-
-        } else {
-
-            myProjectList.innerHTML =
-                projects
-                    .map(project =>
-                        myProjectCard(project)
-                    )
-                    .join("");
-
-        }
-
-    }
-
-
-    if (overviewProjects) {
-
-        if (!projects.length) {
-
-            overviewProjects.innerHTML = `
-                <div class="empty-card">
-                    <div class="empty-icon">◫</div>
-                    <h2>No projects</h2>
-                    <p>Create a project to start monitoring.</p>
-                </div>
-            `;
-
-        } else {
-
-            overviewProjects.innerHTML =
-                projects
-                    .slice(0, 5)
-                    .map(project =>
-                        deadlineRow(project)
-                    )
-                    .join("");
-
-        }
-
-    }
-
-
-    updateProjectBadge(
-        projects.length
-    );
-
-}
-
-
-/* =========================================================
-   PROJECT ROW
-========================================================= */
-
-function projectRow(project) {
-
-    const progress =
-        getProjectProgress(project);
-
-
-    return `
-        <div class="project-row">
-
-            <span>
-                <strong>
-                    ${escapeHtml(project.name)}
-                </strong>
-
-                ${
-                    project.project_code
-                    ? `<small>${escapeHtml(project.project_code)}</small>`
-                    : ""
-                }
-            </span>
-
-
-            <span>
-                ${escapeHtml(project.location || "—")}
-            </span>
-
-
-            <span>
-                <span class="status ${statusClass(project.status)}">
-                    ${escapeHtml(project.status)}
-                </span>
-            </span>
-
-
-            <span>
-
-                <div class="progress">
-                    <div
-                        style="width:${progress}%"
-                    ></div>
-                </div>
-
-                <small>
-                    ${progress}%
-                </small>
-
-            </span>
-
-
-            <button
-                onclick="deleteProject('${project.id}')"
-            >
-                Delete
-            </button>
-
-        </div>
-    `;
-
-}
-
-
-/* =========================================================
-   MY PROJECT CARD
-========================================================= */
-
-function myProjectCard(project) {
-
-    const progress =
-        getProjectProgress(project);
-
-
-    return `
-        <div class="panel" style="margin-bottom:15px">
-
-            <div class="panel-header">
-
-                <div>
-
-                    <div class="eyebrow">
-                        ${escapeHtml(project.project_code || "PROJECT")}
-                    </div>
-
-                    <h2>
-                        ${escapeHtml(project.name)}
-                    </h2>
-
-                </div>
-
-                <span class="status ${statusClass(project.status)}">
-                    ${escapeHtml(project.status)}
-                </span>
-
-            </div>
-
-            <p>
-                ${escapeHtml(project.location || "No location specified")}
-            </p>
-
-            <div class="progress">
-                <div style="width:${progress}%"></div>
-            </div>
-
-            <small>
-                ${progress}% complete
-            </small>
-
-        </div>
-    `;
-
-}
-
-
-/* =========================================================
-   PROJECT STATUS
-========================================================= */
-
-function statusClass(status) {
-
-    switch (status) {
-
-        case "Ongoing":
-            return "ongoing";
-
-        case "For Review":
-            return "review";
-
-        case "Completed":
-            return "completed";
-
-        case "Suspended":
-            return "urgent";
-
-        default:
-            return "upcoming";
-
-    }
-
-}
-
-
-/* =========================================================
-   PROJECT PROGRESS
-========================================================= */
-
-function getProjectProgress(project) {
-
-    const notes =
-        project.notes || "";
-
-
-    const match =
-        notes.match(
-            /\[Progress:\s*(\d+)%\]/i
-        );
-
-
-    if (match) {
-
-        return Math.min(
-            100,
-            Math.max(
-                0,
-                Number(match[1])
-            )
-        );
-
-    }
-
-
-    if (
-        project.status === "Completed"
-    ) {
-        return 100;
-    }
-
-
-    if (
-        project.status === "Planning"
-    ) {
-        return 0;
-    }
-
-
-    return 50;
-
-}
-
-
-/* =========================================================
-   DELETE PROJECT
-========================================================= */
-
-async function deleteProject(id) {
-
-    if (
-        !confirm(
-            "Delete this project?"
-        )
-    ) {
-        return;
-    }
-
-
-    const {
-        error
-    } =
-        await db
-            .from("projects")
-            .delete()
-            .eq(
-                "id",
-                id
-            )
-            .eq(
-                "owner_id",
-                currentUser.id
-            );
-
-
-    if (error) {
-
-        alert(
-            "Unable to delete project:\n\n" +
-            error.message
-        );
-
-        return;
-
-    }
-
-
-    await loadProjects();
-
-    await loadDashboard();
-
-}
-
-
-/* =========================================================
-   OVERVIEW PROJECT ROW
-========================================================= */
-
-function deadlineRow(project) {
-
-    const date =
-        project.target_date
-            ? new Date(
-                project.target_date +
-                "T00:00:00"
-            )
-            : null;
-
-
-    const day =
-        date
-            ? date.getDate()
-            : "—";
-
-
-    const month =
-        date
-            ? date.toLocaleDateString(
-                "en-US",
-                {
-                    month: "short"
-                }
-            ).toUpperCase()
-            : "";
-
-
-    return `
-        <div class="deadline">
-
-            <div class="deadline-date">
-
-                <strong>
-                    ${day}
-                </strong>
-
-                <span>
-                    ${month}
-                </span>
-
-            </div>
-
-
-            <div class="deadline-info">
-
-                <strong>
-                    ${escapeHtml(project.name)}
-                </strong>
-
-                <span>
-                    ${escapeHtml(project.location || "No location")}
-                </span>
-
-            </div>
-
-
-            <span class="status ${statusClass(project.status)}">
-                ${escapeHtml(project.status)}
-            </span>
-
-        </div>
-    `;
-
-}
-
-
-/* =========================================================
-   UPDATE PROJECT BADGE
-========================================================= */
-
-function updateProjectBadge(count) {
-
-    const badge =
-        document.getElementById(
-            "projectBadge"
-        );
-
-
-    if (badge) {
-
-        badge.textContent =
-            count;
-
-    }
-
-}
-
-
-/* =========================================================
-   DASHBOARD
-========================================================= */
-
-async function loadDashboard() {
-
-    if (!currentUser) {
-        return;
-    }
-
-
-    const {
-        data: projects,
-        error: projectError
-    } =
-        await db
-            .from("projects")
-            .select("*")
-            .eq(
-                "owner_id",
-                currentUser.id
-            );
-
-
-    if (projectError) {
-
-        console.error(
-            projectError
-        );
-
-        return;
-
-    }
-
-
-    const {
-        count: documentCount,
-        error: documentError
-    } =
-        await db
-            .from("documents")
-            .select(
-                "id",
-                {
-                    count: "exact",
-                    head: true
-                }
-            )
-            .eq(
-                "owner_id",
-                currentUser.id
-            );
-
-
-    if (documentError) {
-
-        console.error(
-            documentError
-        );
-
-    }
-
-
-    const active =
-        projects.filter(
-            project =>
-                project.status !== "Completed"
-        ).length;
-
-
-    const review =
-        projects.filter(
-            project =>
-                project.status === "For Review"
-        ).length;
-
-
-    const completed =
-        projects.filter(
-            project =>
-                project.status === "Completed"
-        ).length;
-
-
-    setText(
-        "activeProjectsCount",
-        active
-    );
-
-
-    setText(
-        "reviewProjectsCount",
-        review
-    );
-
-
-    setText(
-        "completedProjectsCount",
-        completed
-    );
-
-
-    setText(
-        "documentsCount",
-        documentCount || 0
-    );
-
-
-    const averageProgress =
-        projects.length
-            ? Math.round(
-                projects.reduce(
-                    (
-                        total,
-                        project
-                    ) =>
-                        total +
-                        getProjectProgress(project),
-                    0
-                ) /
-                projects.length
-            )
-            : 0;
-
-
-    setText(
-        "workspaceProgress",
-        averageProgress + "%"
-    );
-
-}
-
-
-/* =========================================================
-   DOCUMENT UPLOAD
+   UPLOAD DOCUMENT
 ========================================================= */
 
 async function uploadDocument() {
+
+    if (!currentUser) {
+
+        alert("Please sign in first.");
+
+        return;
+    }
+
+
+    const file =
+        document.getElementById(
+            "documentFile"
+        ).files[0];
+
 
     const title =
         document.getElementById(
@@ -1792,100 +807,92 @@ async function uploadDocument() {
         ).value;
 
 
-    const fileInput =
-        document.getElementById(
-            "documentFile"
-        );
-
-
-    const file =
-        fileInput.files[0];
-
-
     if (!file) {
 
-        alert(
-            "Please select a file."
-        );
+        alert("Please select a file.");
 
         return;
-
     }
 
 
     if (!title) {
 
-        alert(
-            "Please enter a document title."
-        );
+        alert("Please enter a document title.");
 
         return;
-
     }
 
 
+    /*
+       Create a unique path:
+
+       user-id / timestamp / filename
+    */
+
     const safeFileName =
-        sanitizeFileName(
-            file.name
-        );
+        file.name
+            .replace(
+                /[^a-zA-Z0-9._-]/g,
+                "_"
+            );
 
 
     const filePath =
-        `${currentUser.id}/${Date.now()}_${safeFileName}`;
+        currentUser.id +
+        "/" +
+        Date.now() +
+        "_" +
+        safeFileName;
 
 
-    /*
-     * Upload to Supabase Storage.
-     *
-     * IMPORTANT:
-     * The storage bucket must be named:
-     *
-     * documents
-     */
+    const submitButton =
+        document.getElementById(
+            "modalSubmitButton"
+        );
 
-    const {
-        error: uploadError
-    } =
-        await db.storage
+
+    submitButton.disabled = true;
+    submitButton.textContent = "Uploading...";
+
+
+    try {
+
+        /*
+           1. Upload physical file
+           to Supabase Storage
+        */
+
+        const {
+            error: uploadError
+        } = await db
+            .storage
             .from("documents")
             .upload(
                 filePath,
                 file,
                 {
                     cacheControl: "3600",
-                    upsert: false
+                    upsert: false,
+                    contentType: file.type
                 }
             );
 
 
-    if (uploadError) {
+        if (uploadError) {
 
-        console.error(
-            "Storage error:",
-            uploadError
-        );
+            throw uploadError;
 
-
-        alert(
-            "File upload failed:\n\n" +
-            uploadError.message
-        );
+        }
 
 
-        return;
+        /*
+           2. Save file metadata
+           to documents table
+        */
 
-    }
-
-
-    /*
-     * Save document information
-     * to public.documents
-     */
-
-    const {
-        error: databaseError
-    } =
-        await db
+        const {
+            error: databaseError
+        } = await db
             .from("documents")
             .insert({
 
@@ -1905,7 +912,7 @@ async function uploadDocument() {
                     filePath,
 
                 mime_type:
-                    file.type || null,
+                    file.type,
 
                 size_bytes:
                     file.size
@@ -1913,90 +920,564 @@ async function uploadDocument() {
             });
 
 
-    if (databaseError) {
-
-        console.error(
-            "Document database error:",
-            databaseError
-        );
-
-
         /*
-         * Remove uploaded file if
-         * database insert fails.
-         */
+           If database insert fails,
+           remove uploaded file so we
+           don't leave orphaned files.
+        */
 
-        await db.storage
-            .from("documents")
-            .remove([
-                filePath
-            ]);
+        if (databaseError) {
+
+            await db
+                .storage
+                .from("documents")
+                .remove([
+                    filePath
+                ]);
+
+            throw databaseError;
+
+        }
 
 
         alert(
-            "Document record could not be saved:\n\n" +
-            databaseError.message
+            "Document uploaded successfully."
         );
 
 
-        return;
+        closeModal();
+
+
+        await refreshAll();
+
+
+        showPage("content");
+
+
+    } catch (error) {
+
+        console.error(
+            "Upload error:",
+            error
+        );
+
+
+        alert(
+            "Upload failed:\n\n" +
+            error.message
+        );
+
+
+    } finally {
+
+        submitButton.disabled = false;
+        submitButton.textContent = "Save";
 
     }
-
-
-    alert(
-        "Document uploaded successfully."
-    );
-
-
-    closeModal();
-
-    await loadDocuments();
-
-    await loadDashboard();
 
 }
 
 
 /* =========================================================
-   LOAD DOCUMENTS
+   MODAL SUBMIT
 ========================================================= */
 
-async function loadDocuments() {
+document
+    .getElementById("modalForm")
+    .addEventListener(
+        "submit",
+        async function (event) {
 
-    if (!currentUser) {
-        return;
-    }
+            event.preventDefault();
+
+
+            if (modalMode === "project") {
+
+                await saveProject();
+
+            } else {
+
+                await uploadDocument();
+
+            }
+
+        }
+    );
+
+
+/* =========================================================
+   LOAD PROJECTS
+========================================================= */
+
+async function loadProjects() {
+
+    if (!currentUser) return;
 
 
     const {
         data,
         error
-    } =
-        await db
-            .from("documents")
-            .select("*")
-            .eq(
-                "owner_id",
-                currentUser.id
-            )
-            .order(
-                "created_at",
-                {
-                    ascending: false
-                }
-            );
+    } = await db
+        .from("projects")
+        .select("*")
+        .order(
+            "created_at",
+            {
+                ascending: false
+            }
+        );
 
 
     if (error) {
 
         console.error(
-            "Documents loading error:",
+            "Project error:",
             error
         );
 
         return;
+    }
 
+
+    renderProjects(data || []);
+
+}
+
+
+/* =========================================================
+   RENDER PROJECTS
+========================================================= */
+
+function renderProjects(projects) {
+
+    const list =
+        document.getElementById(
+            "projectList"
+        );
+
+
+    const myList =
+        document.getElementById(
+            "myProjectList"
+        );
+
+
+    const overview =
+        document.getElementById(
+            "overviewProjects"
+        );
+
+
+    if (!projects.length) {
+
+        if (list) {
+
+            list.innerHTML = `
+                <div class="empty-card">
+                    <div class="empty-icon">◫</div>
+                    <h2>No projects yet</h2>
+                    <p>Create your first project.</p>
+                    <button
+                        class="button primary"
+                        onclick="openProjectModal()">
+                        + New project
+                    </button>
+                </div>
+            `;
+
+        }
+
+
+        if (myList) {
+
+            myList.innerHTML = `
+                <div class="empty-card">
+                    <div class="empty-icon">✓</div>
+                    <h2>No projects yet</h2>
+                    <p>Your projects will appear here.</p>
+                </div>
+            `;
+
+        }
+
+
+        if (overview) {
+
+            overview.innerHTML = `
+                <div class="empty-card">
+                    <div class="empty-icon">◫</div>
+                    <h2>No projects</h2>
+                    <p>Create a project to begin monitoring.</p>
+                </div>
+            `;
+
+        }
+
+
+        updateProjectStats([]);
+
+        return;
+
+    }
+
+
+    if (list) {
+
+        list.innerHTML =
+            projects.map(
+                projectRow
+            ).join("");
+
+    }
+
+
+    if (myList) {
+
+        const mine =
+            projects.filter(
+                project =>
+                    project.owner_id ===
+                    currentUser.id
+            );
+
+
+        myList.innerHTML =
+            mine.length
+                ? mine.map(projectCard).join("")
+                : `
+                    <div class="empty-card">
+                        <div class="empty-icon">✓</div>
+                        <h2>No projects assigned</h2>
+                        <p>You don't have any projects yet.</p>
+                    </div>
+                `;
+
+    }
+
+
+    if (overview) {
+
+        overview.innerHTML =
+            projects
+                .slice(0, 5)
+                .map(
+                    projectDeadline
+                )
+                .join("");
+
+    }
+
+
+    updateProjectStats(projects);
+
+}
+
+
+/* =========================================================
+   PROJECT ROW
+========================================================= */
+
+function projectRow(project) {
+
+    const progress =
+        Number(
+            project.progress || 0
+        );
+
+
+    return `
+        <div class="project-row">
+
+            <div>
+                <strong>
+                    ${escapeHTML(project.name)}
+                </strong>
+
+                <small>
+                    ${escapeHTML(project.project_code || "")}
+                </small>
+            </div>
+
+            <div>
+                ${escapeHTML(project.location || "—")}
+            </div>
+
+            <div>
+                <span class="status ${statusClass(project.status)}">
+                    ${escapeHTML(project.status)}
+                </span>
+            </div>
+
+            <div>
+
+                <div class="progress">
+                    <div style="width:${progress}%"></div>
+                </div>
+
+                <small>
+                    ${progress}%
+                </small>
+
+            </div>
+
+            <div>
+                <button
+                    onclick="deleteProject('${project.id}')">
+                    Delete
+                </button>
+            </div>
+
+        </div>
+    `;
+
+}
+
+
+/* =========================================================
+   PROJECT CARD
+========================================================= */
+
+function projectCard(project) {
+
+    return `
+        <div class="panel" style="margin-bottom:15px">
+
+            <div class="panel-header">
+
+                <div>
+                    <div class="eyebrow">
+                        ${escapeHTML(project.project_code || "PROJECT")}
+                    </div>
+
+                    <h2>
+                        ${escapeHTML(project.name)}
+                    </h2>
+
+                    <p>
+                        ${escapeHTML(project.location || "No location")}
+                    </p>
+                </div>
+
+                <span class="status ${statusClass(project.status)}">
+                    ${escapeHTML(project.status)}
+                </span>
+
+            </div>
+
+            <div class="progress">
+                <div style="width:${Number(project.progress || 0)}%"></div>
+            </div>
+
+            <p>
+                Progress:
+                <strong>
+                    ${Number(project.progress || 0)}%
+                </strong>
+            </p>
+
+        </div>
+    `;
+
+}
+
+
+/* =========================================================
+   OVERVIEW PROJECT
+========================================================= */
+
+function projectDeadline(project) {
+
+    return `
+        <div class="deadline">
+
+            <div class="deadline-date">
+
+                <strong>
+                    ${project.target_date
+                        ? new Date(project.target_date).getDate()
+                        : "—"}
+                </strong>
+
+                <span>
+                    ${project.target_date
+                        ? new Date(project.target_date)
+                            .toLocaleDateString(
+                                "en-US",
+                                {month:"short"}
+                            )
+                            .toUpperCase()
+                        : ""}
+                </span>
+
+            </div>
+
+            <div class="deadline-info">
+
+                <strong>
+                    ${escapeHTML(project.name)}
+                </strong>
+
+                <span>
+                    ${escapeHTML(project.location || "No location")}
+                </span>
+
+            </div>
+
+            <span class="status ${statusClass(project.status)}">
+                ${escapeHTML(project.status)}
+            </span>
+
+        </div>
+    `;
+
+}
+
+
+/* =========================================================
+   PROJECT STATS
+========================================================= */
+
+function updateProjectStats(projects) {
+
+    const active =
+        projects.filter(
+            p =>
+                p.status !== "Completed"
+        ).length;
+
+
+    const review =
+        projects.filter(
+            p =>
+                p.status === "For Review"
+        ).length;
+
+
+    const completed =
+        projects.filter(
+            p =>
+                p.status === "Completed"
+        ).length;
+
+
+    const total =
+        projects.length;
+
+
+    const progress =
+        total
+            ? Math.round(
+                projects.reduce(
+                    (sum, p) =>
+                        sum +
+                        Number(p.progress || 0),
+                    0
+                ) / total
+            )
+            : 0;
+
+
+    setText(
+        "activeProjectsCount",
+        active
+    );
+
+    setText(
+        "reviewProjectsCount",
+        review
+    );
+
+    setText(
+        "completedProjectsCount",
+        completed
+    );
+
+    setText(
+        "workspaceProgress",
+        progress + "%"
+    );
+
+
+    setText(
+        "projectBadge",
+        total
+    );
+
+}
+
+
+/* =========================================================
+   DELETE PROJECT
+========================================================= */
+
+async function deleteProject(id) {
+
+    if (
+        !confirm(
+            "Delete this project?"
+        )
+    ) return;
+
+
+    const {
+        error
+    } = await db
+        .from("projects")
+        .delete()
+        .eq(
+            "id",
+            id
+        );
+
+
+    if (error) {
+
+        alert(
+            "Could not delete project:\n\n" +
+            error.message
+        );
+
+        return;
+
+    }
+
+
+    await refreshAll();
+
+}
+
+
+/* =========================================================
+   DOCUMENTS
+========================================================= */
+
+async function loadDocuments() {
+
+    if (!currentUser) return;
+
+
+    const {
+        data,
+        error
+    } = await db
+        .from("documents")
+        .select("*")
+        .order(
+            "created_at",
+            {
+                ascending: false
+            }
+        );
+
+
+    if (error) {
+
+        console.error(
+            "Document error:",
+            error
+        );
+
+        return;
     }
 
 
@@ -2019,49 +1500,55 @@ function renderDocuments(documents) {
         );
 
 
-    const recent =
-        document.getElementById(
-            "recentFiles"
-        );
-
-
-    const orders =
-        document.getElementById(
-            "ordersDocuments"
-        );
-
-
-    const standards =
-        document.getElementById(
-            "standardsDocuments"
-        );
-
-
-    const forms =
-        document.getElementById(
-            "formsDocuments"
-        );
-
-
     if (library) {
 
         library.innerHTML =
             documents.length
-                ? documents
-                    .map(
-                        documentItem
-                    )
-                    .join("")
-                :
-                    `
+                ? documents.map(
+                    libraryItem
+                ).join("")
+                : `
                     <div class="empty-card">
-                        <div class="empty-icon">▤</div>
+                        <div class="empty-icon">D</div>
                         <h2>No documents</h2>
                         <p>Upload your first document.</p>
                     </div>
-                    `;
+                `;
 
     }
+
+
+    setText(
+        "documentsCount",
+        documents.length
+    );
+
+
+    renderCategory(
+        documents,
+        "Department Order",
+        "ordersDocuments"
+    );
+
+
+    renderCategory(
+        documents,
+        "Standard / Template",
+        "standardsDocuments"
+    );
+
+
+    renderCategory(
+        documents,
+        "Form",
+        "formsDocuments"
+    );
+
+
+    const recent =
+        document.getElementById(
+            "recentFiles"
+        );
 
 
     if (recent) {
@@ -2076,41 +1563,107 @@ function renderDocuments(documents) {
 
     }
 
-
-    renderCategory(
-        orders,
-        documents,
-        "Department Order"
-    );
+}
 
 
-    renderCategory(
-        standards,
-        documents,
-        "Standard / Template"
-    );
+/* =========================================================
+   CATEGORY DOCUMENTS
+========================================================= */
+
+function renderCategory(
+    documents,
+    category,
+    elementId
+) {
+
+    const container =
+        document.getElementById(
+            elementId
+        );
 
 
-    renderCategory(
-        forms,
-        documents,
-        "Form"
-    );
+    if (!container) return;
 
 
-    filterLibrary();
+    const filtered =
+        documents.filter(
+            doc =>
+                doc.project_name ===
+                category
+        );
+
+
+    container.innerHTML =
+        filtered.length
+            ? filtered.map(
+                documentCard
+            ).join("")
+            : `
+                <div class="empty-card">
+                    <div class="empty-icon">D</div>
+                    <h2>No documents</h2>
+                    <p>
+                        Upload a document to this category.
+                    </p>
+                </div>
+            `;
 
 }
 
 
 /* =========================================================
-   DOCUMENT ITEM
+   DOCUMENT CARD
 ========================================================= */
 
-function documentItem(document) {
+function documentCard(document) {
+
+    return `
+        <div class="document-card">
+
+            <div class="document-icon">
+                ${fileExtension(document.file_name)}
+            </div>
+
+            <h3>
+                ${escapeHTML(document.title)}
+            </h3>
+
+            <p>
+                ${escapeHTML(document.file_name)}
+            </p>
+
+            <span>
+                ${formatBytes(document.size_bytes)}
+            </span>
+
+            <br><br>
+
+            <button
+                class="button secondary"
+                onclick="openDocument('${document.id}')">
+                Open
+            </button>
+
+            <button
+                class="button secondary"
+                onclick="deleteDocument('${document.id}')">
+                Delete
+            </button>
+
+        </div>
+    `;
+
+}
+
+
+/* =========================================================
+   LIBRARY ITEM
+========================================================= */
+
+function libraryItem(document) {
 
     const type =
-        getFileType(
+        fileExtension(
             document.file_name
         );
 
@@ -2122,35 +1675,30 @@ function documentItem(document) {
         >
 
             <div class="library-icon">
-                ${fileIcon(type)}
+                ${type}
             </div>
-
 
             <div>
 
                 <strong>
-                    ${escapeHtml(document.title)}
+                    ${escapeHTML(document.title)}
                 </strong>
 
                 <span>
-                    ${escapeHtml(document.file_name)}
+                    ${escapeHTML(document.file_name)}
                     ·
-                    ${formatFileSize(document.size_bytes)}
+                    ${formatBytes(document.size_bytes)}
                 </span>
 
             </div>
 
-
             <button
-                onclick="openDocument('${document.file_path}')"
-            >
+                onclick="openDocument('${document.id}')">
                 Open
             </button>
 
-
             <button
-                onclick="deleteDocument('${document.id}', '${document.file_path}')"
-            >
+                onclick="deleteDocument('${document.id}')">
                 Delete
             </button>
 
@@ -2166,39 +1714,32 @@ function documentItem(document) {
 
 function recentFile(document) {
 
-    const type =
-        getFileType(
-            document.file_name
-        );
-
-
     return `
         <div class="file-row">
 
             <div class="file-icon">
-                ${fileIcon(type)}
+                ${fileExtension(document.file_name)}
             </div>
 
             <div class="file-info">
 
                 <strong>
-                    ${escapeHtml(document.title)}
+                    ${escapeHTML(document.title)}
                 </strong>
 
                 <span>
-                    ${escapeHtml(document.file_name)}
+                    ${formatBytes(document.size_bytes)}
                 </span>
 
             </div>
 
             <span class="file-tag">
-                ${type}
+                ${fileExtension(document.file_name)}
             </span>
 
             <button
                 class="download"
-                onclick="openDocument('${document.file_path}')"
-            >
+                onclick="openDocument('${document.id}')">
                 ↗
             </button>
 
@@ -2209,121 +1750,59 @@ function recentFile(document) {
 
 
 /* =========================================================
-   CATEGORY DOCUMENTS
-========================================================= */
-
-function renderCategory(
-    container,
-    documents,
-    category
-) {
-
-    if (!container) {
-        return;
-    }
-
-
-    const filtered =
-        documents.filter(
-            document =>
-                document.project_name ===
-                category
-        );
-
-
-    if (!filtered.length) {
-
-        container.innerHTML = `
-            <div class="empty-card">
-                <div class="empty-icon">▤</div>
-                <h2>No documents yet</h2>
-                <p>
-                    Upload a ${escapeHtml(category.toLowerCase())}.
-                </p>
-            </div>
-        `;
-
-        return;
-
-    }
-
-
-    container.innerHTML =
-        filtered
-            .map(document => {
-
-                const type =
-                    getFileType(
-                        document.file_name
-                    );
-
-
-                return `
-                    <div class="document-card">
-
-                        <div class="document-icon">
-                            ${fileIcon(type)}
-                        </div>
-
-                        <h3>
-                            ${escapeHtml(document.title)}
-                        </h3>
-
-                        <p>
-                            ${escapeHtml(document.file_name)}
-                        </p>
-
-                        <span>
-                            ${type}
-                            ·
-                            ${formatFileSize(document.size_bytes)}
-                        </span>
-
-                        <br><br>
-
-                        <button
-                            class="button secondary"
-                            onclick="openDocument('${document.file_path}')"
-                        >
-                            Open
-                        </button>
-
-                    </div>
-                `;
-
-            })
-            .join("");
-
-}
-
-
-/* =========================================================
    OPEN DOCUMENT
 ========================================================= */
 
-async function openDocument(filePath) {
+async function openDocument(id) {
 
     const {
-        data,
+        data: document,
         error
-    } =
-        await db.storage
-            .from("documents")
-            .createSignedUrl(
-                filePath,
-                3600
-            );
+    } = await db
+        .from("documents")
+        .select("*")
+        .eq(
+            "id",
+            id
+        )
+        .single();
 
 
     if (error) {
 
         alert(
-            "Unable to open document:\n\n" +
-            error.message
+            "Could not find document."
         );
 
         return;
+    }
 
+
+    /*
+       Private bucket:
+       create temporary signed URL.
+    */
+
+    const {
+        data,
+        error: storageError
+    } = await db
+        .storage
+        .from("documents")
+        .createSignedUrl(
+            document.file_path,
+            3600
+        );
+
+
+    if (storageError) {
+
+        alert(
+            "Could not open document:\n\n" +
+            storageError.message
+        );
+
+        return;
     }
 
 
@@ -2339,70 +1818,83 @@ async function openDocument(filePath) {
    DELETE DOCUMENT
 ========================================================= */
 
-async function deleteDocument(
-    id,
-    filePath
-) {
+async function deleteDocument(id) {
 
     if (
         !confirm(
             "Delete this document?"
         )
-    ) {
+    ) return;
+
+
+    const {
+        data: document,
+        error
+    } = await db
+        .from("documents")
+        .select(
+            "file_path"
+        )
+        .eq(
+            "id",
+            id
+        )
+        .single();
+
+
+    if (error) {
+
+        alert(
+            error.message
+        );
+
         return;
     }
 
 
     const {
         error: storageError
-    } =
-        await db.storage
-            .from("documents")
-            .remove([
-                filePath
-            ]);
+    } = await db
+        .storage
+        .from("documents")
+        .remove([
+            document.file_path
+        ]);
 
 
     if (storageError) {
 
-        console.error(
-            storageError
+        alert(
+            "Could not delete file:\n\n" +
+            storageError.message
         );
 
+        return;
     }
 
 
     const {
-        error
-    } =
-        await db
-            .from("documents")
-            .delete()
-            .eq(
-                "id",
-                id
-            )
-            .eq(
-                "owner_id",
-                currentUser.id
-            );
+        error: databaseError
+    } = await db
+        .from("documents")
+        .delete()
+        .eq(
+            "id",
+            id
+        );
 
 
-    if (error) {
+    if (databaseError) {
 
         alert(
-            "Unable to delete document:\n\n" +
-            error.message
+            databaseError.message
         );
 
         return;
-
     }
 
 
-    await loadDocuments();
-
-    await loadDashboard();
+    await refreshAll();
 
 }
 
@@ -2426,17 +1918,13 @@ function filterLibrary() {
 
 
     const search =
-        searchInput
-            ? searchInput.value
-                .toLowerCase()
-                .trim()
-            : "";
+        searchInput.value
+            .toLowerCase()
+            .trim();
 
 
     const type =
-        typeFilter
-            ? typeFilter.value
-            : "all";
+        typeFilter.value;
 
 
     const items =
@@ -2457,9 +1945,7 @@ function filterLibrary() {
 
 
         const matchesSearch =
-            text.includes(
-                search
-            );
+            text.includes(search);
 
 
         const matchesType =
@@ -2479,7 +1965,7 @@ function filterLibrary() {
 
 
 /* =========================================================
-   TEAM DIRECTORY
+   TEAM
 ========================================================= */
 
 async function loadTeam() {
@@ -2487,229 +1973,119 @@ async function loadTeam() {
     const {
         data,
         error
-    } =
-        await db
-            .from("profiles")
-            .select(
-                "id, full_name, position, role"
-            )
-            .order(
-                "full_name",
-                {
-                    ascending: true
-                }
-            );
+    } = await db
+        .from("profiles")
+        .select("*")
+        .order(
+            "full_name"
+        );
 
 
     if (error) {
 
         console.error(
-            "Team loading error:",
+            "Team error:",
             error
         );
 
         return;
-
     }
 
 
-    const teamList =
+    const container =
         document.getElementById(
             "teamList"
         );
 
 
-    if (!teamList) {
-        return;
-    }
+    if (!container) return;
 
 
-    if (!data.length) {
+    container.innerHTML =
+        (data || [])
+            .map(
+                teamMember
+            )
+            .join("");
 
-        teamList.innerHTML = `
-            <div class="empty-card">
-                <h2>No team members</h2>
+}
+
+
+function teamMember(member) {
+
+    const name =
+        member.full_name ||
+        "User";
+
+
+    return `
+        <div class="team-card">
+
+            <div class="team-avatar">
+                ${getInitials(name)}
             </div>
-        `;
 
-        return;
+            <h3>
+                ${escapeHTML(name)}
+            </h3>
 
-    }
+            <p>
+                ${escapeHTML(member.position || "Member")}
+            </p>
 
-
-    teamList.innerHTML =
-        data.map(member => {
-
-            const initials =
-                getInitials(
-                    member.full_name ||
-                    "User"
-                );
-
-
-            return `
-                <div class="team-card">
-
-                    <div class="team-avatar">
-                        ${initials}
-                    </div>
-
-                    <h3>
-                        ${escapeHtml(
-                            member.full_name ||
-                            "User"
-                        )}
-                    </h3>
-
-                    <p>
-                        ${escapeHtml(
-                            member.position ||
-                            member.role ||
-                            "Member"
-                        )}
-                    </p>
-
-                </div>
-            `;
-
-        }).join("");
+        </div>
+    `;
 
 }
 
 
 /* =========================================================
-   FILE TYPE
+   REFRESH EVERYTHING
 ========================================================= */
 
-function getFileType(fileName) {
+async function refreshAll() {
 
-    const extension =
-        fileName
-            .split(".")
-            .pop()
-            .toLowerCase();
+    await Promise.all([
 
+        loadProjects(),
 
-    if (extension === "pdf") {
-        return "PDF";
-    }
+        loadDocuments(),
 
-    if (
-        extension === "xlsx" ||
-        extension === "xls"
-    ) {
-        return "XLSX";
-    }
+        loadTeam()
 
-    if (
-        extension === "docx" ||
-        extension === "doc"
-    ) {
-        return "DOCX";
-    }
-
-
-    return extension
-        .toUpperCase();
+    ]);
 
 }
 
 
 /* =========================================================
-   FILE ICON
+   HELPERS
 ========================================================= */
 
-function fileIcon(type) {
+function setText(
+    id,
+    value
+) {
 
-    switch (type) {
+    const element =
+        document.getElementById(id);
 
-        case "PDF":
-            return "PDF";
 
-        case "XLSX":
-            return "XLS";
+    if (element) {
 
-        case "DOCX":
-            return "DOC";
-
-        default:
-            return "FILE";
+        element.textContent =
+            value;
 
     }
 
 }
 
 
-/* =========================================================
-   FILE SIZE
-========================================================= */
+function escapeHTML(value) {
 
-function formatFileSize(bytes) {
-
-    if (!bytes) {
-        return "0 KB";
-    }
-
-
-    const units = [
-        "B",
-        "KB",
-        "MB",
-        "GB"
-    ];
-
-
-    let size =
-        Number(bytes);
-
-    let index = 0;
-
-
-    while (
-        size >= 1024 &&
-        index < units.length - 1
-    ) {
-
-        size /= 1024;
-
-        index++;
-
-    }
-
-
-    return (
-        size.toFixed(
-            index === 0 ? 0 : 1
-        ) +
-        " " +
-        units[index]
-    );
-
-}
-
-
-/* =========================================================
-   SANITIZE FILE NAME
-========================================================= */
-
-function sanitizeFileName(name) {
-
-    return name
-        .replace(
-            /[^a-zA-Z0-9._-]/g,
-            "_"
-        );
-
-}
-
-
-/* =========================================================
-   HTML ESCAPE
-========================================================= */
-
-function escapeHtml(value) {
-
-    return String(value ?? "")
+    return String(
+        value ?? ""
+    )
         .replace(
             /&/g,
             "&amp;"
@@ -2734,27 +2110,116 @@ function escapeHtml(value) {
 }
 
 
-/* =========================================================
-   SET TEXT
-========================================================= */
+function statusClass(status) {
 
-function setText(
-    id,
-    value
-) {
+    switch (status) {
 
-    const element =
-        document.getElementById(id);
+        case "Completed":
+            return "completed";
 
+        case "For Review":
+            return "review";
 
-    if (element) {
+        case "Ongoing":
+            return "ongoing";
 
-        element.textContent =
-            value;
+        case "Suspended":
+            return "urgent";
+
+        default:
+            return "upcoming";
 
     }
 
 }
+
+
+function fileExtension(filename) {
+
+    const ext =
+        filename
+            .split(".")
+            .pop()
+            .toUpperCase();
+
+
+    if (ext === "XLS")
+        return "XLSX";
+
+    if (ext === "DOC")
+        return "DOCX";
+
+    return ext;
+
+}
+
+
+function formatBytes(bytes) {
+
+    if (!bytes)
+        return "0 KB";
+
+
+    const units =
+        [
+            "Bytes",
+            "KB",
+            "MB",
+            "GB"
+        ];
+
+
+    const index =
+        Math.floor(
+            Math.log(bytes) /
+            Math.log(1024)
+        );
+
+
+    return (
+        parseFloat(
+            (
+                bytes /
+                Math.pow(
+                    1024,
+                    index
+                )
+            ).toFixed(1)
+        ) +
+        " " +
+        units[index]
+    );
+
+}
+
+
+/* =========================================================
+   SIDEBAR LINKS
+========================================================= */
+
+document
+    .querySelectorAll(".nav-item")
+    .forEach(item => {
+
+        item.addEventListener(
+            "click",
+            function (event) {
+
+                event.preventDefault();
+
+                const page =
+                    this.dataset.page;
+
+                if (page) {
+
+                    showPage(page);
+
+                }
+
+            }
+        );
+
+    });
 
 
 /* =========================================================
@@ -2763,10 +2228,11 @@ function setText(
 
 document.addEventListener(
     "keydown",
-    function(event) {
+    function (event) {
 
         if (
-            event.key === "Escape"
+            event.key === "Escape" &&
+            modal.classList.contains("open")
         ) {
 
             closeModal();
@@ -2778,16 +2244,92 @@ document.addEventListener(
 
 
 /* =========================================================
+   AUTH EVENTS
+========================================================= */
+
+document
+    .getElementById("loginForm")
+    .addEventListener(
+        "submit",
+        loginUser
+    );
+
+
+document
+    .getElementById("registerForm")
+    .addEventListener(
+        "submit",
+        registerUser
+    );
+
+
+/* =========================================================
    INITIALIZE
 ========================================================= */
 
 document.addEventListener(
     "DOMContentLoaded",
-    async function() {
+    async function () {
 
-        showPage("overview");
+        const {
+            data: {
+                session
+            }
+        } =
+            await db.auth.getSession();
 
-        await initializeApplication();
+
+        if (session) {
+
+            await loadApplication();
+
+        } else {
+
+            document
+                .getElementById(
+                    "authScreen"
+                )
+                .style.display = "flex";
+
+
+            document
+                .getElementById(
+                    "app"
+                )
+                .style.display = "none";
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   AUTH STATE LISTENER
+========================================================= */
+
+db.auth.onAuthStateChange(
+    async (event, session) => {
+
+        if (
+            event === "SIGNED_IN" &&
+            session
+        ) {
+
+            currentUser =
+                session.user;
+
+        }
+
+
+        if (
+            event === "SIGNED_OUT"
+        ) {
+
+            currentUser = null;
+            currentProfile = null;
+
+        }
 
     }
 );
