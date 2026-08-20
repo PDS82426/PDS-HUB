@@ -4,13 +4,11 @@
    ========================================================= */
 
 const SUPABASE_URL = "https://zvwghoabsqfyakbqzhil.supabase.co";
-const SUPABASE_KEY = "sb_publishable_oJ3Zc3TplfYgePQEmTrJ8Q_qycxR0jQ";
+const SUPABASE_ANON_KEY = "YOUR_PUBLISHABLE_KEY";
 
-const { createClient } = window.supabase;
-
-const db = createClient(
+const supabaseClient = window.supabase.createClient(
     SUPABASE_URL,
-    SUPABASE_KEY
+    SUPABASE_ANON_KEY
 );
 
 
