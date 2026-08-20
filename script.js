@@ -717,25 +717,25 @@ async function saveProject() {
             "projectLocation"
         ).value.trim() || null,
 
-    status:
-        document.getElementById(
-            "projectStatus"
-        ).value,
+status:
+    document.getElementById(
+        "projectStatus"
+    ).value,
 
-    progress:
-        Math.min(
-            100,
-            Math.max(
-                0,
-                Number(
-                    document.getElementById(
-                        "projectProgress"
-                    ).value
-                ) || 0
-            )
-        ),
+progress:
+    Math.min(
+        100,
+        Math.max(
+            0,
+            Number(
+                document.getElementById(
+                    "projectProgress"
+                ).value
+            ) || 0
+        )
+    ),
 
-    target_date:
+target_date:
         document.getElementById(
             "projectTargetDate"
         ).value || null,
