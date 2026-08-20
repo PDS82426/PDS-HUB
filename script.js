@@ -114,17 +114,17 @@ async function registerUser(event) {
         console.log("Supabase URL:", SUPABASE_URL);
 
         const { data, error } = await db.auth.signUp({
-            email: email,
-            password: password,
-            options: {
-                data: {
-                    full_name: name,
-                    position: position
-                },
-                emailRedirectTo:
-                    "https://christinedpwh2024-blip.github.io/PDS-HUB/"
-            }
-        });
+    email: email,
+    password: password,
+    options: {
+        data: {
+            full_name: name,
+            position: position
+        },
+        emailRedirectTo:
+            "https://christinedpwh2024-blip.github.io/PDS-HUB/"
+    }
+});
 
         console.log("Signup response:", data);
         console.log("Signup error:", error);
