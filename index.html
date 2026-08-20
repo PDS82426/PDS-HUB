@@ -1,26 +1,252 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>PDS Hub — Planning & Design Section</title>
+
     <link rel="stylesheet" href="style.css">
+
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
 <body>
 
-<div class="app">
+<!-- =========================================================
+     AUTH SCREEN
+========================================================= -->
+
+<div id="authScreen" class="auth-screen">
+
+    <div class="auth-card">
+
+        <div class="auth-brand">
+            <div class="brand-mark">P</div>
+
+            <div>
+                <div class="brand-name">PDS Hub</div>
+                <div class="brand-subtitle">
+                    Planning & Design Section
+                </div>
+            </div>
+        </div>
+
+        <!-- SIGN IN -->
+
+        <div id="loginPanel">
+
+            <div class="auth-heading">
+                <div class="eyebrow">WELCOME BACK</div>
+
+                <h1>Sign in</h1>
+
+                <p>
+                    Access your PDS Hub workspace.
+                </p>
+            </div>
+
+            <form id="loginForm">
+
+                <label>
+                    Email
+
+                    <input
+                        id="loginEmail"
+                        type="email"
+                        required
+                        autocomplete="email"
+                        placeholder="you@example.com"
+                    >
+                </label>
+
+                <label>
+                    Password
+
+                    <input
+                        id="loginPassword"
+                        type="password"
+                        required
+                        autocomplete="current-password"
+                        placeholder="Enter your password"
+                    >
+                </label>
+
+                <button
+                    type="submit"
+                    class="button primary auth-submit"
+                >
+                    Sign In
+                </button>
+
+            </form>
+
+            <div id="loginMessage" class="auth-message"></div>
+
+            <div class="auth-switch">
+
+                Don't have an account?
+
+                <button
+                    type="button"
+                    onclick="showRegister()"
+                >
+                    Create Account
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <!-- CREATE ACCOUNT -->
+
+        <div id="registerPanel" style="display:none;">
+
+            <div class="auth-heading">
+
+                <div class="eyebrow">
+                    NEW USER
+                </div>
+
+                <h1>Create account</h1>
+
+                <p>
+                    Create your PDS Hub workspace account.
+                </p>
+
+            </div>
+
+
+            <form id="registerForm">
+
+                <label>
+                    Full Name
+
+                    <input
+                        id="registerName"
+                        type="text"
+                        required
+                        placeholder="Full name"
+                    >
+                </label>
+
+
+                <label>
+                    Position
+
+                    <input
+                        id="registerPosition"
+                        type="text"
+                        placeholder="Engineer II"
+                    >
+                </label>
+
+
+                <label>
+                    Email
+
+                    <input
+                        id="registerEmail"
+                        type="email"
+                        required
+                        autocomplete="email"
+                        placeholder="you@example.com"
+                    >
+                </label>
+
+
+                <label>
+                    Password
+
+                    <input
+                        id="registerPassword"
+                        type="password"
+                        required
+                        minlength="6"
+                        autocomplete="new-password"
+                        placeholder="At least 6 characters"
+                    >
+                </label>
+
+
+                <label>
+                    Confirm Password
+
+                    <input
+                        id="registerConfirm"
+                        type="password"
+                        required
+                        minlength="6"
+                        autocomplete="new-password"
+                        placeholder="Repeat password"
+                    >
+                </label>
+
+
+                <button
+                    type="submit"
+                    class="button primary auth-submit"
+                >
+                    Create Account
+                </button>
+
+            </form>
+
+
+            <div id="registerMessage" class="auth-message"></div>
+
+
+            <div class="auth-switch">
+
+                Already have an account?
+
+                <button
+                    type="button"
+                    onclick="showLogin()"
+                >
+                    Sign In
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     MAIN APPLICATION
+========================================================= -->
+
+<div id="app" class="app" style="display:none;">
 
     <!-- SIDEBAR -->
+
     <aside class="sidebar">
 
         <div class="brand">
+
             <div class="brand-mark">P</div>
+
             <div>
-                <div class="brand-name">PDS Hub</div>
-                <div class="brand-subtitle">Planning & Design Section</div>
+
+                <div class="brand-name">
+                    PDS Hub
+                </div>
+
+                <div class="brand-subtitle">
+                    Planning & Design Section
+                </div>
+
             </div>
+
         </div>
+
 
         <nav class="navigation">
 
@@ -47,7 +273,7 @@
             <a href="#" class="nav-item" data-page="projects">
                 <span>◫</span>
                 <span>Project Monitoring</span>
-                <span class="badge">5</span>
+                <span id="projectBadge" class="badge">0</span>
             </a>
 
             <a href="#" class="nav-item" data-page="myprojects">
@@ -67,203 +293,405 @@
 
         </nav>
 
+
         <div class="sidebar-bottom">
+
             <div class="help-box">
+
                 <strong>Need something?</strong>
-                <p>Use global search to find any issuance, form, or project.</p>
-                <button onclick="focusSearch()">Search documents →</button>
+
+                <p>
+                    Use global search to find any issuance,
+                    form, or project.
+                </p>
+
+                <button onclick="focusSearch()">
+                    Search documents →
+                </button>
+
             </div>
 
+
             <div class="profile">
-                <div class="avatar">JM</div>
-                <div class="profile-info">
-                    <strong>Jamie Mendoza</strong>
-                    <small>Engineer II</small>
+
+                <div id="sidebarAvatar" class="avatar">
+                    U
                 </div>
-                <button class="dots">•••</button>
+
+                <div class="profile-info">
+
+                    <strong id="sidebarName">
+                        User
+                    </strong>
+
+                    <small id="sidebarPosition">
+                        Member
+                    </small>
+
+                </div>
+
+                <button
+                    class="dots"
+                    onclick="signOut()"
+                    title="Sign out"
+                >
+                    ⇥
+                </button>
+
             </div>
+
         </div>
 
     </aside>
 
 
     <!-- MAIN -->
+
     <main class="main">
 
         <!-- TOPBAR -->
+
         <header class="topbar">
 
             <div class="mobile-brand">
-                <div class="brand-mark">P</div>
-                <strong>PDS Hub</strong>
+
+                <div class="brand-mark">
+                    P
+                </div>
+
+                <strong>
+                    PDS Hub
+                </strong>
+
             </div>
 
+
             <div class="search-container">
-                <span class="search-icon">⌕</span>
+
+                <span class="search-icon">
+                    ⌕
+                </span>
+
                 <input
                     id="globalSearch"
                     type="search"
                     placeholder="Search DOs, formats, forms, projects..."
                     autocomplete="off"
                 >
-                <span class="shortcut">⌘ K</span>
+
+                <span class="shortcut">
+                    ⌘ K
+                </span>
+
             </div>
 
+
             <div class="top-actions">
-                <button class="icon-button" title="Notifications">
-                    ♢
-                    <span class="notification">3</span>
+
+                <button
+                    class="icon-button"
+                    title="Sign out"
+                    onclick="signOut()"
+                >
+                    ⇥
                 </button>
 
-                <div class="top-avatar">JM</div>
+                <div
+                    id="topAvatar"
+                    class="top-avatar"
+                >
+                    U
+                </div>
+
             </div>
 
         </header>
 
 
         <!-- CONTENT -->
+
         <div class="content">
 
-            <!-- OVERVIEW PAGE -->
+
+            <!-- OVERVIEW -->
+
             <section id="overview" class="page active-page">
 
                 <div class="date-label">
-                    WEDNESDAY · 19 AUG 2026
+                    PDS HUB · WORKSPACE
                 </div>
+
 
                 <div class="hero">
 
                     <div>
-                        <h1>Magandang araw, Jamie! 👋</h1>
+
+                        <h1>
+                            Magandang araw,
+                            <span id="welcomeName">
+                                User
+                            </span>! 👋
+                        </h1>
 
                         <p>
                             Here’s what needs your attention today.
-                            You have <strong>3 upcoming deadlines</strong> this week.
+                            Your PDS Hub workspace is connected.
                         </p>
+
                     </div>
 
+
                     <div class="hero-actions">
-                        <button class="button secondary" onclick="showPage('projects')">
+
+                        <button
+                            class="button secondary"
+                            onclick="showPage('projects')"
+                        >
                             View my projects →
                         </button>
 
-                        <button class="button primary" onclick="openUpdateModal()">
+                        <button
+                            class="button primary"
+                            onclick="openUpdateModal()"
+                        >
                             + New update
                         </button>
+
                     </div>
 
                 </div>
 
 
                 <!-- PROJECT STATUS -->
+
                 <div class="section-heading">
+
                     <div>
-                        <div class="eyebrow">PROJECT WORKSPACE</div>
-                        <h2>At a glance</h2>
+
+                        <div class="eyebrow">
+                            PROJECT WORKSPACE
+                        </div>
+
+                        <h2>
+                            At a glance
+                        </h2>
+
                     </div>
 
-                    <span class="workspace-progress">72%</span>
+                    <span
+                        id="workspaceProgress"
+                        class="workspace-progress"
+                    >
+                        0%
+                    </span>
+
                 </div>
 
 
                 <div class="stats-grid">
 
                     <div class="stat-card">
+
                         <div class="stat-top">
-                            <span class="stat-label">Active projects</span>
-                            <span class="stat-arrow">↗</span>
+                            <span class="stat-label">
+                                Active projects
+                            </span>
+
+                            <span class="stat-arrow">
+                                ↗
+                            </span>
                         </div>
 
-                        <div class="stat-number">32</div>
+                        <div
+                            id="activeProjectsCount"
+                            class="stat-number"
+                        >
+                            0
+                        </div>
 
                         <div class="stat-change positive">
-                            +4 this month
+                            Your workspace
                         </div>
+
                     </div>
 
 
                     <div class="stat-card">
+
                         <div class="stat-top">
-                            <span class="stat-label">For review</span>
-                            <span class="stat-arrow">↗</span>
+                            <span class="stat-label">
+                                For review
+                            </span>
+
+                            <span class="stat-arrow">
+                                ↗
+                            </span>
                         </div>
 
-                        <div class="stat-number">8</div>
+                        <div
+                            id="reviewProjectsCount"
+                            class="stat-number"
+                        >
+                            0
+                        </div>
 
                         <div class="stat-change">
-                            2 due this week
+                            Projects requiring review
                         </div>
+
                     </div>
 
 
                     <div class="stat-card">
+
                         <div class="stat-top">
-                            <span class="stat-label">Completed</span>
-                            <span class="stat-arrow">↗</span>
+                            <span class="stat-label">
+                                Completed
+                            </span>
+
+                            <span class="stat-arrow">
+                                ↗
+                            </span>
                         </div>
 
-                        <div class="stat-number">14</div>
+                        <div
+                            id="completedProjectsCount"
+                            class="stat-number"
+                        >
+                            0
+                        </div>
 
                         <div class="stat-change">
-                            2026 projects
+                            Completed projects
                         </div>
+
                     </div>
 
 
                     <div class="stat-card">
+
                         <div class="stat-top">
-                            <span class="stat-label">Needs action</span>
-                            <span class="stat-arrow">↗</span>
+                            <span class="stat-label">
+                                Documents
+                            </span>
+
+                            <span class="stat-arrow">
+                                ↗
+                            </span>
                         </div>
 
-                        <div class="stat-number">5</div>
+                        <div
+                            id="documentsCount"
+                            class="stat-number"
+                        >
+                            0
+                        </div>
 
                         <div class="stat-change warning">
-                            View items
+                            Your document library
                         </div>
+
                     </div>
 
                 </div>
 
 
                 <!-- QUICK ACCESS -->
+
                 <div class="section-heading quick-heading">
+
                     <div>
-                        <div class="eyebrow">GO-TO TOOLS</div>
-                        <h2>Quick access</h2>
+
+                        <div class="eyebrow">
+                            GO-TO TOOLS
+                        </div>
+
+                        <h2>
+                            Quick access
+                        </h2>
+
                     </div>
 
-                    <button class="text-button">Customize</button>
                 </div>
 
 
                 <div class="quick-grid">
 
-                    <button class="quick-card" onclick="showPage('orders')">
-                        <div class="quick-icon">D</div>
-                        <div>
-                            <strong>Department Orders</strong>
-                            <span>Latest issuances</span>
+                    <button
+                        class="quick-card"
+                        onclick="showPage('orders')"
+                    >
+
+                        <div class="quick-icon">
+                            D
                         </div>
+
+                        <div>
+
+                            <strong>
+                                Department Orders
+                            </strong>
+
+                            <span>
+                                Latest issuances
+                            </span>
+
+                        </div>
+
                         <b>→</b>
+
                     </button>
 
-                    <button class="quick-card" onclick="showPage('standards')">
-                        <div class="quick-icon">P</div>
-                        <div>
-                            <strong>POW & ABC</strong>
-                            <span>Current formats</span>
+
+                    <button
+                        class="quick-card"
+                        onclick="showPage('standards')"
+                    >
+
+                        <div class="quick-icon">
+                            P
                         </div>
+
+                        <div>
+
+                            <strong>
+                                POW & ABC
+                            </strong>
+
+                            <span>
+                                Current formats
+                            </span>
+
+                        </div>
+
                         <b>→</b>
+
                     </button>
 
-                    <button class="quick-card" onclick="showPage('forms')">
-                        <div class="quick-icon">F</div>
-                        <div>
-                            <strong>Forms Hub</strong>
-                            <span>Admin & field forms</span>
+
+                    <button
+                        class="quick-card"
+                        onclick="showPage('forms')"
+                    >
+
+                        <div class="quick-icon">
+                            F
                         </div>
+
+                        <div>
+
+                            <strong>
+                                Forms Hub
+                            </strong>
+
+                            <span>
+                                Admin & field forms
+                            </span>
+
+                        </div>
+
                         <b>→</b>
+
                     </button>
 
                 </div>
@@ -272,154 +700,62 @@
                 <div class="two-column">
 
                     <!-- DEADLINES -->
+
                     <div class="panel">
 
                         <div class="panel-header">
+
                             <div>
-                                <div class="eyebrow">COMING UP</div>
-                                <h2>Deadlines</h2>
+
+                                <div class="eyebrow">
+                                    WORKSPACE
+                                </div>
+
+                                <h2>
+                                    Project status
+                                </h2>
+
                             </div>
-
-                            <button class="small-button">Calendar</button>
-                        </div>
-
-
-                        <div class="deadline">
-
-                            <div class="deadline-date">
-                                <strong>21</strong>
-                                <span>AUG</span>
-                            </div>
-
-                            <div class="deadline-info">
-                                <strong>POW review · Package 26B-014</strong>
-                                <span>Batangas City · 2 days left</span>
-                            </div>
-
-                            <span class="status urgent">Urgent</span>
 
                         </div>
 
 
-                        <div class="deadline">
-
-                            <div class="deadline-date">
-                                <strong>25</strong>
-                                <span>AUG</span>
-                            </div>
-
-                            <div class="deadline-info">
-                                <strong>Submit updated survey data</strong>
-                                <span>San Pascual · 6 days left</span>
-                            </div>
-
-                            <span class="status upcoming">Upcoming</span>
-
-                        </div>
+                        <div
+                            id="overviewProjects"
+                        ></div>
 
                     </div>
 
 
                     <!-- RECENT FILES -->
+
                     <div class="panel">
 
                         <div class="panel-header">
+
                             <div>
-                                <div class="eyebrow">LATEST</div>
-                                <h2>Recently updated files</h2>
+
+                                <div class="eyebrow">
+                                    LATEST
+                                </div>
+
+                                <h2>
+                                    Recently uploaded
+                                </h2>
+
                             </div>
 
-                            <button class="small-button" onclick="showPage('content')">
+                            <button
+                                class="small-button"
+                                onclick="showPage('content')"
+                            >
                                 See library →
                             </button>
+
                         </div>
 
 
-                        <div class="file-row">
-                            <div class="file-icon">X</div>
-                            <div class="file-info">
-                                <strong>Detailed Unit Price Analysis (DUPA)</strong>
-                                <span>v2026.2 · Updated Aug 14, 2026</span>
-                            </div>
-                            <span class="file-tag">Latest</span>
-                        </div>
-
-
-                        <div class="file-row">
-                            <div class="file-icon">X</div>
-                            <div class="file-info">
-                                <strong>Program of Work (POW)</strong>
-                                <span>v5.1 · Updated Aug 12, 2026</span>
-                            </div>
-                            <span class="download">↓</span>
-                        </div>
-
-
-                        <div class="file-row">
-                            <div class="file-icon">X</div>
-                            <div class="file-info">
-                                <strong>Approved Budget for the Contract (ABC)</strong>
-                                <span>v4.3 · Updated Jul 30, 2026</span>
-                            </div>
-                            <span class="download">↓</span>
-                        </div>
-
-                    </div>
-
-                </div>
-
-
-                <!-- TEAM PULSE -->
-                <div class="panel activity-panel">
-
-                    <div class="panel-header">
-                        <div>
-                            <div class="eyebrow">TEAM PULSE</div>
-                            <h2>PDS activity</h2>
-                        </div>
-
-                        <button class="small-button">View all</button>
-                    </div>
-
-
-                    <div class="activity">
-
-                        <div class="activity-avatar">AC</div>
-
-                        <div>
-                            <strong>Alyssa completed</strong>
-                            <span>MPB plans · Bauan</span>
-                        </div>
-
-                        <time>12m</time>
-
-                    </div>
-
-
-                    <div class="activity">
-
-                        <div class="activity-avatar">PR</div>
-
-                        <div>
-                            <strong>Paolo updated status</strong>
-                            <span>Malindig Bridge</span>
-                        </div>
-
-                        <time>1h</time>
-
-                    </div>
-
-
-                    <div class="activity">
-
-                        <div class="activity-avatar">RG</div>
-
-                        <div>
-                            <strong>Rina uploaded</strong>
-                            <span>DO 72, s. 2026</span>
-                        </div>
-
-                        <time>3h</time>
+                        <div id="recentFiles"></div>
 
                     </div>
 
@@ -427,25 +763,28 @@
 
 
                 <!-- ANNOUNCEMENT -->
+
                 <div class="announcement">
 
-                    <div class="announcement-star">★</div>
+                    <div class="announcement-star">
+                        ★
+                    </div>
 
                     <div>
-                        <div class="eyebrow">ANNOUNCEMENT</div>
+
+                        <div class="eyebrow">
+                            PDS HUB
+                        </div>
 
                         <h3>
-                            New POW and DUPA formats are now in effect
+                            Your Planning & Design workspace is now connected.
                         </h3>
 
                         <p>
-                            Please use the approved August 2026 versions
-                            for all new project submissions.
+                            Projects and documents are saved securely
+                            in your Supabase workspace.
                         </p>
 
-                        <button onclick="showPage('standards')">
-                            Open updated files →
-                        </button>
                     </div>
 
                 </div>
@@ -454,196 +793,185 @@
 
 
             <!-- DEPARTMENT ORDERS -->
+
             <section id="orders" class="page">
 
                 <div class="page-title">
+
                     <div>
-                        <div class="eyebrow">REFERENCE LIBRARY</div>
-                        <h1>Department Orders</h1>
-                        <p>Latest issuances and official department orders.</p>
+
+                        <div class="eyebrow">
+                            REFERENCE LIBRARY
+                        </div>
+
+                        <h1>
+                            Department Orders
+                        </h1>
+
+                        <p>
+                            Latest issuances and official department orders.
+                        </p>
+
                     </div>
 
-                    <button class="button primary" onclick="openUploadModal()">
+                    <button
+                        class="button primary"
+                        onclick="openUploadModal('Department Order')"
+                    >
                         + Upload document
                     </button>
-                </div>
-
-                <div class="document-grid">
-
-                    <div class="document-card">
-                        <div class="document-icon">D</div>
-                        <h3>DO 72, s. 2026</h3>
-                        <p>Latest Department Order</p>
-                        <span>Updated Aug 2026</span>
-                    </div>
-
-                    <div class="document-card">
-                        <div class="document-icon">D</div>
-                        <h3>DO 28, s. 2019</h3>
-                        <p>Cost Estimation Manual</p>
-                        <span>Reference</span>
-                    </div>
-
-                    <div class="document-card">
-                        <div class="document-icon">D</div>
-                        <h3>DO 12, s. 2025</h3>
-                        <p>Planning and Design Guidelines</p>
-                        <span>Reference</span>
-                    </div>
 
                 </div>
+
+
+                <div
+                    id="ordersDocuments"
+                    class="document-grid"
+                ></div>
 
             </section>
 
 
             <!-- STANDARDS -->
+
             <section id="standards" class="page">
 
                 <div class="page-title">
+
                     <div>
-                        <div class="eyebrow">TEMPLATES</div>
-                        <h1>Standards & Templates</h1>
-                        <p>Approved formats for planning and design work.</p>
+
+                        <div class="eyebrow">
+                            TEMPLATES
+                        </div>
+
+                        <h1>
+                            Standards & Templates
+                        </h1>
+
+                        <p>
+                            Approved formats for planning and design work.
+                        </p>
+
                     </div>
 
-                    <button class="button primary" onclick="openUploadModal()">
+                    <button
+                        class="button primary"
+                        onclick="openUploadModal('Standard / Template')"
+                    >
                         + Add template
                     </button>
-                </div>
-
-                <div class="document-grid">
-
-                    <div class="document-card">
-                        <div class="document-icon">P</div>
-                        <h3>Program of Work</h3>
-                        <p>POW approved format</p>
-                        <span>v5.1 · August 2026</span>
-                    </div>
-
-                    <div class="document-card">
-                        <div class="document-icon">A</div>
-                        <h3>Approved Budget for the Contract</h3>
-                        <p>ABC preparation format</p>
-                        <span>v4.3</span>
-                    </div>
-
-                    <div class="document-card">
-                        <div class="document-icon">X</div>
-                        <h3>Detailed Unit Price Analysis</h3>
-                        <p>DUPA format</p>
-                        <span>v2026.2</span>
-                    </div>
-
-                    <div class="document-card">
-                        <div class="document-icon">S</div>
-                        <h3>Construction Schedule</h3>
-                        <p>Schedule and S-Curve template</p>
-                        <span>Current</span>
-                    </div>
 
                 </div>
+
+
+                <div
+                    id="standardsDocuments"
+                    class="document-grid"
+                ></div>
 
             </section>
 
 
             <!-- FORMS -->
+
             <section id="forms" class="page">
 
                 <div class="page-title">
+
                     <div>
-                        <div class="eyebrow">FORMS LIBRARY</div>
-                        <h1>Forms Hub</h1>
-                        <p>Administrative, technical and field forms.</p>
+
+                        <div class="eyebrow">
+                            FORMS LIBRARY
+                        </div>
+
+                        <h1>
+                            Forms Hub
+                        </h1>
+
+                        <p>
+                            Administrative, technical and field forms.
+                        </p>
+
                     </div>
 
-                    <button class="button primary" onclick="openUploadModal()">
+                    <button
+                        class="button primary"
+                        onclick="openUploadModal('Form')"
+                    >
                         + Add form
                     </button>
-                </div>
-
-                <div class="document-grid">
-
-                    <div class="document-card">
-                        <div class="document-icon">F</div>
-                        <h3>Site Inspection Report</h3>
-                        <p>Field inspection form</p>
-                        <span>DOCX</span>
-                    </div>
-
-                    <div class="document-card">
-                        <div class="document-icon">F</div>
-                        <h3>Project Monitoring Report</h3>
-                        <p>Project status monitoring</p>
-                        <span>XLSX</span>
-                    </div>
-
-                    <div class="document-card">
-                        <div class="document-icon">F</div>
-                        <h3>Progress Report</h3>
-                        <p>Monthly progress reporting</p>
-                        <span>DOCX</span>
-                    </div>
 
                 </div>
+
+
+                <div
+                    id="formsDocuments"
+                    class="document-grid"
+                ></div>
 
             </section>
 
 
             <!-- PROJECTS -->
+
             <section id="projects" class="page">
 
                 <div class="page-title">
+
                     <div>
-                        <div class="eyebrow">PROJECT WORKSPACE</div>
-                        <h1>Project Monitoring</h1>
-                        <p>Track project progress, status and important deadlines.</p>
+
+                        <div class="eyebrow">
+                            PROJECT WORKSPACE
+                        </div>
+
+                        <h1>
+                            Project Monitoring
+                        </h1>
+
+                        <p>
+                            Track project progress, status and important deadlines.
+                        </p>
+
                     </div>
 
-                    <button class="button primary" onclick="openProjectModal()">
+                    <button
+                        class="button primary"
+                        onclick="openProjectModal()"
+                    >
                         + New project
                     </button>
+
                 </div>
 
 
                 <div class="project-table">
 
                     <div class="table-header">
-                        <span>PROJECT</span>
-                        <span>LOCATION</span>
-                        <span>STATUS</span>
-                        <span>PROGRESS</span>
-                        <span>ACTION</span>
+
+                        <span>
+                            PROJECT
+                        </span>
+
+                        <span>
+                            LOCATION
+                        </span>
+
+                        <span>
+                            STATUS
+                        </span>
+
+                        <span>
+                            PROGRESS
+                        </span>
+
+                        <span>
+                            ACTION
+                        </span>
+
                     </div>
 
-                    <div class="project-row">
-                        <strong>Package 26B-014</strong>
-                        <span>Batangas City</span>
-                        <span class="status ongoing">Ongoing</span>
-                        <div class="progress">
-                            <div style="width:72%"></div>
-                        </div>
-                        <button>View →</button>
-                    </div>
 
-                    <div class="project-row">
-                        <strong>Malindig Bridge</strong>
-                        <span>Marinduque</span>
-                        <span class="status review">For Review</span>
-                        <div class="progress">
-                            <div style="width:54%"></div>
-                        </div>
-                        <button>View →</button>
-                    </div>
-
-                    <div class="project-row">
-                        <strong>MPB Plans</strong>
-                        <span>Bauan</span>
-                        <span class="status completed">Completed</span>
-                        <div class="progress">
-                            <div style="width:100%"></div>
-                        </div>
-                        <button>View →</button>
-                    </div>
+                    <div id="projectList"></div>
 
                 </div>
 
@@ -651,88 +979,104 @@
 
 
             <!-- MY PROJECTS -->
+
             <section id="myprojects" class="page">
 
                 <div class="page-title">
+
                     <div>
-                        <div class="eyebrow">PERSONAL WORKSPACE</div>
-                        <h1>My Projects</h1>
-                        <p>Your assigned and monitored projects.</p>
+
+                        <div class="eyebrow">
+                            PERSONAL WORKSPACE
+                        </div>
+
+                        <h1>
+                            My Projects
+                        </h1>
+
+                        <p>
+                            Your assigned and monitored projects.
+                        </p>
+
                     </div>
+
                 </div>
 
-                <div class="empty-card">
-                    <div class="empty-icon">◫</div>
-                    <h2>Your project workspace</h2>
-                    <p>Select a project from Project Monitoring to view its details.</p>
-                    <button class="button primary" onclick="showPage('projects')">
-                        View projects
-                    </button>
-                </div>
+
+                <div id="myProjectList"></div>
 
             </section>
 
 
             <!-- TEAM -->
+
             <section id="team" class="page">
 
                 <div class="page-title">
+
                     <div>
-                        <div class="eyebrow">PEOPLE</div>
-                        <h1>Team Directory</h1>
-                        <p>Planning & Design Section team members.</p>
-                    </div>
-                </div>
 
-                <div class="team-grid">
+                        <div class="eyebrow">
+                            PEOPLE
+                        </div>
 
-                    <div class="team-card">
-                        <div class="team-avatar">JM</div>
-                        <h3>Jamie Mendoza</h3>
-                        <p>Engineer II</p>
-                    </div>
+                        <h1>
+                            Team Directory
+                        </h1>
 
-                    <div class="team-card">
-                        <div class="team-avatar">AC</div>
-                        <h3>Alyssa Cruz</h3>
-                        <p>Engineer II</p>
-                    </div>
+                        <p>
+                            Planning & Design Section team members.
+                        </p>
 
-                    <div class="team-card">
-                        <div class="team-avatar">PR</div>
-                        <h3>Paolo Reyes</h3>
-                        <p>Engineer I</p>
-                    </div>
-
-                    <div class="team-card">
-                        <div class="team-avatar">RG</div>
-                        <h3>Rina Garcia</h3>
-                        <p>Document Controller</p>
                     </div>
 
                 </div>
+
+
+                <div
+                    id="teamList"
+                    class="team-grid"
+                ></div>
 
             </section>
 
 
             <!-- CONTENT MANAGER -->
+
             <section id="content" class="page">
 
                 <div class="page-title">
+
                     <div>
-                        <div class="eyebrow">DOCUMENT LIBRARY</div>
-                        <h1>Content Manager</h1>
-                        <p>Manage PDS Hub documents and resources.</p>
+
+                        <div class="eyebrow">
+                            DOCUMENT LIBRARY
+                        </div>
+
+                        <h1>
+                            Content Manager
+                        </h1>
+
+                        <p>
+                            Manage PDS Hub documents and resources.
+                        </p>
+
                     </div>
 
-                    <button class="button primary" onclick="openUploadModal()">
+                    <button
+                        class="button primary"
+                        onclick="openUploadModal()"
+                    >
                         + Upload file
                     </button>
+
                 </div>
+
 
                 <div class="library">
 
                     <div class="library-toolbar">
+
                         <input
                             id="librarySearch"
                             type="search"
@@ -740,45 +1084,34 @@
                             oninput="filterLibrary()"
                         >
 
-                        <select id="fileTypeFilter" onchange="filterLibrary()">
-                            <option value="all">All files</option>
-                            <option value="PDF">PDF</option>
-                            <option value="XLSX">Excel</option>
-                            <option value="DOCX">Word</option>
+
+                        <select
+                            id="fileTypeFilter"
+                            onchange="filterLibrary()"
+                        >
+
+                            <option value="all">
+                                All files
+                            </option>
+
+                            <option value="PDF">
+                                PDF
+                            </option>
+
+                            <option value="XLSX">
+                                Excel
+                            </option>
+
+                            <option value="DOCX">
+                                Word
+                            </option>
+
                         </select>
-                    </div>
-
-
-                    <div id="libraryList">
-
-                        <div class="library-item" data-type="XLSX">
-                            <div class="library-icon">X</div>
-                            <div>
-                                <strong>Detailed Unit Price Analysis (DUPA)</strong>
-                                <span>XLSX · v2026.2</span>
-                            </div>
-                            <button>Open</button>
-                        </div>
-
-                        <div class="library-item" data-type="XLSX">
-                            <div class="library-icon">X</div>
-                            <div>
-                                <strong>Program of Work (POW)</strong>
-                                <span>XLSX · v5.1</span>
-                            </div>
-                            <button>Open</button>
-                        </div>
-
-                        <div class="library-item" data-type="PDF">
-                            <div class="library-icon">P</div>
-                            <div>
-                                <strong>DO 72, s. 2026</strong>
-                                <span>PDF · Department Order</span>
-                            </div>
-                            <button>Open</button>
-                        </div>
 
                     </div>
+
+
+                    <div id="libraryList"></div>
 
                 </div>
 
@@ -791,41 +1124,214 @@
 </div>
 
 
-<!-- MODAL -->
+<!-- =========================================================
+     PROJECT / UPLOAD MODAL
+========================================================= -->
+
 <div id="modal" class="modal">
 
-    <div class="modal-overlay" onclick="closeModal()"></div>
+    <div
+        class="modal-overlay"
+        onclick="closeModal()"
+    ></div>
+
 
     <div class="modal-box">
 
-        <button class="modal-close" onclick="closeModal()">×</button>
+        <button
+            class="modal-close"
+            onclick="closeModal()"
+        >
+            ×
+        </button>
 
-        <h2 id="modalTitle">New update</h2>
+
+        <h2 id="modalTitle">
+            New project
+        </h2>
+
 
         <p id="modalDescription">
-            Add an update to your PDS Hub workspace.
+            Create a new PDS Hub item.
         </p>
 
-        <form id="modalForm" onsubmit="handleModalSubmit(event)">
 
-            <label>
-                Title
-                <input id="modalInput" type="text" required>
-            </label>
+        <form id="modalForm">
 
-            <label>
-                Description
-                <textarea id="modalTextarea" rows="4"></textarea>
-            </label>
+            <div id="projectFields">
+
+                <label>
+                    Project Code
+
+                    <input
+                        id="projectCode"
+                        type="text"
+                        placeholder="e.g. 26B-014"
+                    >
+                </label>
+
+
+                <label>
+                    Project Name
+
+                    <input
+                        id="projectName"
+                        type="text"
+                        required
+                    >
+                </label>
+
+
+                <label>
+                    Location
+
+                    <input
+                        id="projectLocation"
+                        type="text"
+                    >
+                </label>
+
+
+                <label>
+                    Status
+
+                    <select id="projectStatus">
+
+                        <option value="Planning">
+                            Planning
+                        </option>
+
+                        <option value="Ongoing">
+                            Ongoing
+                        </option>
+
+                        <option value="For Review">
+                            For Review
+                        </option>
+
+                        <option value="Completed">
+                            Completed
+                        </option>
+
+                        <option value="Suspended">
+                            Suspended
+                        </option>
+
+                    </select>
+
+                </label>
+
+
+                <label>
+                    Progress (%)
+
+                    <input
+                        id="projectProgress"
+                        type="number"
+                        min="0"
+                        max="100"
+                        value="0"
+                    >
+
+                </label>
+
+
+                <label>
+                    Target Date
+
+                    <input
+                        id="projectTargetDate"
+                        type="date"
+                    >
+
+                </label>
+
+
+                <label>
+                    Notes
+
+                    <textarea
+                        id="projectNotes"
+                        rows="3"
+                    ></textarea>
+
+                </label>
+
+            </div>
+
+
+            <div id="uploadFields" style="display:none;">
+
+                <label>
+                    Document Title
+
+                    <input
+                        id="documentTitle"
+                        type="text"
+                    >
+
+                </label>
+
+
+                <label>
+                    Category
+
+                    <select id="documentCategory">
+
+                        <option value="General">
+                            General
+                        </option>
+
+                        <option value="Department Order">
+                            Department Order
+                        </option>
+
+                        <option value="Standard / Template">
+                            Standard / Template
+                        </option>
+
+                        <option value="Form">
+                            Form
+                        </option>
+
+                    </select>
+
+                </label>
+
+
+                <label>
+                    File
+
+                    <input
+                        id="documentFile"
+                        type="file"
+                        accept=".pdf,.xlsx,.xls,.docx,.doc"
+                    >
+
+                </label>
+
+            </div>
+
 
             <div class="modal-actions">
-                <button type="button" class="button secondary" onclick="closeModal()">
+
+                <button
+                    type="button"
+                    class="button secondary"
+                    onclick="closeModal()"
+                >
                     Cancel
                 </button>
 
-                <button type="submit" class="button primary">
+
+                <button
+                    type="submit"
+                    class="button primary"
+                    id="modalSubmitButton"
+                >
                     Save
                 </button>
+
             </div>
 
         </form>
@@ -836,6 +1342,7 @@
 
 
 <!-- MOBILE NAV -->
+
 <nav class="mobile-nav">
 
     <button onclick="showPage('overview')">
@@ -870,3 +1377,4 @@
 
 </body>
 </html>
+```
