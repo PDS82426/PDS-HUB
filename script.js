@@ -698,43 +698,53 @@ async function saveProject() {
     if (!currentUser) return;
 
 
-    const project = {
+   const project = {
 
-        owner_id: currentUser.id,
+    owner_id: currentUser.id,
 
-        project_code:
-            document.getElementById(
-                "projectCode"
-            ).value.trim() || null,
+    project_code:
+        document.getElementById(
+            "projectCode"
+        ).value.trim() || null,
 
-        name:
-            document.getElementById(
-                "projectName"
-            ).value.trim(),
+    name:
+        document.getElementById(
+            "projectName"
+        ).value.trim(),
 
-        location:
-            document.getElementById(
-                "projectLocation"
-            ).value.trim() || null,
+    location:
+        document.getElementById(
+            "projectLocation"
+        ).value.trim() || null,
 
-        status:
-            document.getElementById(
-                "projectStatus"
-            ).value,
+    status:
+        document.getElementById(
+            "projectStatus"
+        ).value,
 
-        target_date:
-            document.getElementById(
-                "projectTargetDate"
-            ).value || null,
+    progress:
+        Math.min(
+            100,
+            Math.max(
+                0,
+                Number(
+                    document.getElementById(
+                        "projectProgress"
+                    ).value
+                ) || 0
+            )
+        ),
 
-        notes:
-            document.getElementById(
-                "projectNotes"
-            ).value.trim() || null
+    target_date:
+        document.getElementById(
+            "projectTargetDate"
+        ).value || null,
 
-    };
-
-
+    notes:
+        document.getElementById(
+            "projectNotes"
+        ).value.trim() || null
+};
     if (!project.name) {
 
         alert("Please enter a project name.");
