@@ -7,8 +7,8 @@
    SUPABASE CONFIGURATION
    ========================================================= */
 
-const SUPABASE_URL = "YOUR_SUPABASE_PROJECT_URL";
-const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
+const SUPABASE_URL = "https://zvwghoabsqfyakbqzhil.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp2d2dob2Fic3FmeWFrYnF6aGlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcxODAxMDQsImV4cCI6MjEwMjc1NjEwNH0.GygaBIhjAOKBMfMl3W8hM3Iox2rSUs9FF-eW_PaSIY0";
 
 const supabaseClient = window.supabase.createClient(
     SUPABASE_URL,
