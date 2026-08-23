@@ -55,6 +55,8 @@ function showLogin() {
     }
 
     clearAuthMessages();
+       document.getElementById("tabLogin")?.classList.add("is-active");
+    document.getElementById("tabRegister")?.classList.remove("is-active");
 }
 
 
@@ -75,6 +77,8 @@ function showRegister() {
     }
 
     clearAuthMessages();
+       document.getElementById("tabRegister")?.classList.add("is-active");
+    document.getElementById("tabLogin")?.classList.remove("is-active");
 }
 
 
