@@ -8,6 +8,8 @@
     <title>PDS Hub — Planning & Design Section</title>
 
     <link rel="stylesheet" href="style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
     <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -19,202 +21,282 @@
      AUTH SCREEN
 ========================================================= -->
 
-<div id="authScreen" class="auth-screen">
+cat << 'HTMLBLOCK'
+<div id="authScreen">
 
-    <div class="auth-card">
+  <div class="auth-blueprint">
 
-        <div class="auth-brand">
-            <div class="brand-mark">P</div>
+    <div class="auth-mark">
+      <div class="auth-mark-badge">PDS</div>
+      <div class="auth-mark-text">
+        <div class="eyebrow-blueprint">Planning &amp; Design Section</div>
+        <h1>PDS&nbsp;Hub</h1>
+      </div>
+    </div>
 
-            <div>
-                <div class="brand-name">PDS Hub</div>
-                <div class="brand-subtitle">
-                    Planning & Design Section
-                </div>
-            </div>
+    <div class="auth-instrument" aria-hidden="true">
+      <svg viewBox="0 0 200 200" fill="none" stroke="#9fc3e6" stroke-width="1.4">
+        <line class="draw" x1="100" y1="14" x2="100" y2="186"/>
+        <line class="draw" x1="14" y1="100" x2="186" y2="100"/>
+        <circle class="draw" cx="100" cy="100" r="62"/>
+        <circle class="draw" cx="100" cy="100" r="3" fill="#e08a2b" stroke="none"/>
+        <path class="draw" d="M100 38 L138 100 L100 162 L62 100 Z"/>
+      </svg>
+    </div>
+
+    <p class="auth-caption">
+      A shared workspace for department orders, standard forms,
+      and project monitoring across the Planning &amp; Design Section.
+    </p>
+
+    <div class="auth-titleblock">
+      <div class="auth-titleblock-row">
+        <div class="auth-titleblock-cell">
+          <span>System</span>
+          <strong>PDS&nbsp;Hub</strong>
+        </div>
+        <div class="auth-titleblock-cell">
+          <span>Section</span>
+          <strong>Planning &amp; Design</strong>
+        </div>
+        <div class="auth-titleblock-cell">
+          <span>Access</span>
+          <strong>Workspace&nbsp;Login</strong>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="auth-paper">
+    <div class="auth-sheet">
+
+      <div class="auth-tabs">
+        <button type="button" class="auth-tab is-active" id="tabLogin" onclick="showLogin()">Sign In</button>
+        <button type="button" class="auth-tab" id="tabRegister" onclick="showRegister()">Create Account</button>
+      </div>
+
+      <div id="loginPanel">
+
+        <p class="auth-eyebrow">Welcome back</p>
+        <h1 class="auth-title">Sign in</h1>
+        <p class="auth-sub">Access your PDS Hub workspace.</p>
+
+        <form id="loginForm">
+
+          <label>
+            Email
+            <input id="loginEmail" type="email" required autocomplete="email" placeholder="you@example.com">
+          </label>
+
+          <label>
+            Password
+            <input id="loginPassword" type="password" required autocomplete="current-password" placeholder="Enter your password">
+          </label>
+
+          <button type="submit" class="auth-submit">Sign In</button>
+
+        </form>
+
+        <div id="loginMessage" class="auth-message"></div>
+
+        <div class="auth-switch">
+          Don't have an account?
+          <button type="button" onclick="showRegister()">Create Account</button>
         </div>
 
-        <!-- SIGN IN -->
+      </div>
 
-        <div id="loginPanel">
+      <div id="registerPanel" style="display:none;">
 
-            <div class="auth-heading">
-                <div class="eyebrow">WELCOME BACK</div>
+        <p class="auth-eyebrow">New user</p>
+        <h1 class="auth-title">Create account</h1>
+        <p class="auth-sub">Create your PDS Hub workspace account.</p>
 
-                <h1>Sign in</h1>
+        <form id="registerForm">
 
-                <p>
-                    Access your PDS Hub workspace.
-                </p>
-            </div>
+          <label>
+            Full Name
+            <input id="registerName" type="text" required placeholder="Full name">
+          </label>
 
-            <form id="loginForm">
+          <label>
+            Position
+            <input id="registerPosition" type="text" placeholder="Engineer II">
+          </label>
 
-                <label>
-                    Email
+          <label>
+            Email
+            <input id="registerEmail" type="email" required autocomplete="email" placeholder="you@example.com">
+          </label>
 
-                    <input
-                        id="loginEmail"
-                        type="email"
-                        required
-                        autocomplete="email"
-                        placeholder="you@example.com"
-                    >
-                </label>
+          <div class="auth-field-row">
+            <label>
+              Password
+              <input id="registerPassword" type="password" required minlength="6" autocomplete="new-password" placeholder="At least 6 characters">
+            </label>
 
-                <label>
-                    Password
+            <label>
+              Confirm Password
+              <input id="registerConfirm" type="password" required minlength="6" autocomplete="new-password" placeholder="Repeat password">
+            </label>
+          </div>
 
-                    <input
-                        id="loginPassword"
-                        type="password"
-                        required
-                        autocomplete="current-password"
-                        placeholder="Enter your password"
-                    >
-                </label>
+          <button type="submit" class="auth-submit">Create Account</button>
 
-                <button
-                    type="submit"
-                    class="button primary auth-submit"
-                >
-                    Sign In
-                </button>
+        </form>
 
-            </form>
+        <div id="registerMessage" class="auth-message"></div>
 
-            <div id="loginMessage" class="auth-message"></div>
-
-            <div class="auth-switch">
-
-                Don't have an account?
-
-                <button
-                    type="button"
-                    onclick="showRegister()"
-                >
-                    Create Account
-                </button>
-
-            </div>
-
+        <div class="auth-switch">
+          Already have an account?
+          <button type="button" onclick="showLogin()">Sign In</button>
         </div>
 
-
-        <!-- CREATE ACCOUNT -->
-
-        <div id="registerPanel" style="display:none;">
-
-            <div class="auth-heading">
-
-                <div class="eyebrow">
-                    NEW USER
-                </div>
-
-                <h1>Create account</h1>
-
-                <p>
-                    Create your PDS Hub workspace account.
-                </p>
-
-            </div>
-
-
-            <form id="registerForm">
-
-                <label>
-                    Full Name
-
-                    <input
-                        id="registerName"
-                        type="text"
-                        required
-                        placeholder="Full name"
-                    >
-                </label>
-
-
-                <label>
-                    Position
-
-                    <input
-                        id="registerPosition"
-                        type="text"
-                        placeholder="Engineer II"
-                    >
-                </label>
-
-
-                <label>
-                    Email
-
-                    <input
-                        id="registerEmail"
-                        type="email"
-                        required
-                        autocomplete="email"
-                        placeholder="you@example.com"
-                    >
-                </label>
-
-
-                <label>
-                    Password
-
-                    <input
-                        id="registerPassword"
-                        type="password"
-                        required
-                        minlength="6"
-                        autocomplete="new-password"
-                        placeholder="At least 6 characters"
-                    >
-                </label>
-
-
-                <label>
-                    Confirm Password
-
-                    <input
-                        id="registerConfirm"
-                        type="password"
-                        required
-                        minlength="6"
-                        autocomplete="new-password"
-                        placeholder="Repeat password"
-                    >
-                </label>
-
-
-                <button
-                    type="submit"
-                    class="button primary auth-submit"
-                >
-                    Create Account
-                </button>
-
-            </form>
-
-
-            <div id="registerMessage" class="auth-message"></div>
-
-
-            <div class="auth-switch">
-
-                Already have an account?
-
-                <button
-                    type="button"
-                    onclick="showLogin()"
-                >
-                    Sign In
-                </button>
-
-            </div>
-
-        </div>
+      </div>
 
     </div>
+  </div>
+
+</div>
+HTMLBLOCK
+Output
+
+<div id="authScreen">
+
+  <div class="auth-blueprint">
+
+    <div class="auth-mark">
+      <div class="auth-mark-badge">PDS</div>
+      <div class="auth-mark-text">
+        <div class="eyebrow-blueprint">Planning &amp; Design Section</div>
+        <h1>PDS&nbsp;Hub</h1>
+      </div>
+    </div>
+
+    <div class="auth-instrument" aria-hidden="true">
+      <svg viewBox="0 0 200 200" fill="none" stroke="#9fc3e6" stroke-width="1.4">
+        <line class="draw" x1="100" y1="14" x2="100" y2="186"/>
+        <line class="draw" x1="14" y1="100" x2="186" y2="100"/>
+        <circle class="draw" cx="100" cy="100" r="62"/>
+        <circle class="draw" cx="100" cy="100" r="3" fill="#e08a2b" stroke="none"/>
+        <path class="draw" d="M100 38 L138 100 L100 162 L62 100 Z"/>
+      </svg>
+    </div>
+
+    <p class="auth-caption">
+      A shared workspace for department orders, standard forms,
+      and project monitoring across the Planning &amp; Design Section.
+    </p>
+
+    <div class="auth-titleblock">
+      <div class="auth-titleblock-row">
+        <div class="auth-titleblock-cell">
+          <span>System</span>
+          <strong>PDS&nbsp;Hub</strong>
+        </div>
+        <div class="auth-titleblock-cell">
+          <span>Section</span>
+          <strong>Planning &amp; Design</strong>
+        </div>
+        <div class="auth-titleblock-cell">
+          <span>Access</span>
+          <strong>Workspace&nbsp;Login</strong>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="auth-paper">
+    <div class="auth-sheet">
+
+      <div class="auth-tabs">
+        <button type="button" class="auth-tab is-active" id="tabLogin" onclick="showLogin()">Sign In</button>
+        <button type="button" class="auth-tab" id="tabRegister" onclick="showRegister()">Create Account</button>
+      </div>
+
+      <div id="loginPanel">
+
+        <p class="auth-eyebrow">Welcome back</p>
+        <h1 class="auth-title">Sign in</h1>
+        <p class="auth-sub">Access your PDS Hub workspace.</p>
+
+        <form id="loginForm">
+
+          <label>
+            Email
+            <input id="loginEmail" type="email" required autocomplete="email" placeholder="you@example.com">
+          </label>
+
+          <label>
+            Password
+            <input id="loginPassword" type="password" required autocomplete="current-password" placeholder="Enter your password">
+          </label>
+
+          <button type="submit" class="auth-submit">Sign In</button>
+
+        </form>
+
+        <div id="loginMessage" class="auth-message"></div>
+
+        <div class="auth-switch">
+          Don't have an account?
+          <button type="button" onclick="showRegister()">Create Account</button>
+        </div>
+
+      </div>
+
+      <div id="registerPanel" style="display:none;">
+
+        <p class="auth-eyebrow">New user</p>
+        <h1 class="auth-title">Create account</h1>
+        <p class="auth-sub">Create your PDS Hub workspace account.</p>
+
+        <form id="registerForm">
+
+          <label>
+            Full Name
+            <input id="registerName" type="text" required placeholder="Full name">
+          </label>
+
+          <label>
+            Position
+            <input id="registerPosition" type="text" placeholder="Engineer II">
+          </label>
+
+          <label>
+            Email
+            <input id="registerEmail" type="email" required autocomplete="email" placeholder="you@example.com">
+          </label>
+
+          <div class="auth-field-row">
+            <label>
+              Password
+              <input id="registerPassword" type="password" required minlength="6" autocomplete="new-password" placeholder="At least 6 characters">
+            </label>
+
+            <label>
+              Confirm Password
+              <input id="registerConfirm" type="password" required minlength="6" autocomplete="new-password" placeholder="Repeat password">
+            </label>
+          </div>
+
+          <button type="submit" class="auth-submit">Create Account</button>
+
+        </form>
+
+        <div id="registerMessage" class="auth-message"></div>
+
+        <div class="auth-switch">
+          Already have an account?
+          <button type="button" onclick="showLogin()">Sign In</button>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
 
 </div>
 
