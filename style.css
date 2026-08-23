@@ -1310,3 +1310,307 @@ button {
     }
 
 }
+cat << 'CSSBLOCK'
+
+/* ============ BLUEPRINT AUTH SCREEN ============ */
+
+#authScreen{
+  display:flex;
+  min-height:100vh;
+  font-family:'Inter', sans-serif;
+}
+
+.auth-blueprint{
+  position:relative;
+  flex:1 1 46%;
+  background:
+    repeating-linear-gradient(0deg, rgba(151,190,224,0.16) 0 1px, transparent 1px 28px),
+    repeating-linear-gradient(90deg, rgba(151,190,224,0.16) 0 1px, transparent 1px 28px),
+    radial-gradient(circle at 30% 20%, #123c66 0%, #0c3355 55%, #082541 100%);
+  color:#eaf2fb;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  padding:48px 44px;
+  min-height:100vh;
+  overflow:hidden;
+}
+
+.auth-blueprint::after{
+  content:"";
+  position:absolute;
+  inset:18px;
+  border:1px solid #3f6f9c;
+  pointer-events:none;
+}
+
+.auth-mark{ display:flex; align-items:center; gap:14px; }
+
+.auth-mark-badge{
+  width:44px; height:44px;
+  border:1.5px solid #9fc3e6;
+  display:flex; align-items:center; justify-content:center;
+  font-family:'IBM Plex Mono', monospace;
+  font-size:13px; letter-spacing:0.06em;
+  color:#eaf2fb;
+  flex-shrink:0;
+}
+
+.eyebrow-blueprint{
+  font-family:'IBM Plex Mono', monospace;
+  font-size:11px; letter-spacing:0.16em;
+  color:#8fb8dd; text-transform:uppercase; margin-bottom:2px;
+}
+
+.auth-mark-text h1{
+  margin:0; font-family:'Oswald', sans-serif; font-weight:600;
+  font-size:20px; letter-spacing:0.03em; text-transform:uppercase;
+}
+
+.auth-instrument{ align-self:center; width:min(280px, 60%); opacity:0.9; }
+.auth-instrument svg{ width:100%; height:auto; display:block; }
+.auth-instrument .draw{ stroke-dasharray:600; stroke-dashoffset:600; animation:draftIn 1.6s ease-out forwards; }
+@keyframes draftIn{ to{ stroke-dashoffset:0; } }
+@media (prefers-reduced-motion: reduce){ .auth-instrument .draw{ animation:none; stroke-dashoffset:0; } }
+
+.auth-caption{
+  font-family:'Oswald', sans-serif; font-weight:500; font-size:15px;
+  letter-spacing:0.02em; color:#cfe1f2; max-width:34ch; line-height:1.5; margin-top:28px;
+}
+
+.auth-titleblock{ border:1px solid #3f6f9c; font-family:'IBM Plex Mono', monospace; font-size:11px; color:#bcd6ee; }
+.auth-titleblock-row{ display:grid; grid-template-columns:1fr 1fr 1fr; }
+.auth-titleblock-cell{ padding:9px 12px; border-right:1px solid #3f6f9c; }
+.auth-titleblock-cell:last-child{ border-right:none; }
+.auth-titleblock-cell span{ display:block; text-transform:uppercase; letter-spacing:0.1em; color:#6f97bd; font-size:9px; margin-bottom:3px; }
+.auth-titleblock-cell strong{ color:#eaf2fb; font-weight:500; letter-spacing:0.02em; }
+
+.auth-paper{
+  flex:1 1 54%;
+  background:#f6f2e7;
+  display:flex; align-items:center; justify-content:center;
+  padding:48px 24px; min-height:100vh;
+}
+
+.auth-sheet{ width:100%; max-width:420px; }
+
+.auth-tabs{ display:flex; border:1px solid #1b1d1f; margin-bottom:36px; }
+.auth-tab{
+  flex:1; padding:13px 0; text-align:center;
+  font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.14em;
+  text-transform:uppercase; color:#5a6068; background:transparent; border:none;
+  cursor:pointer; transition:background 0.15s ease, color 0.15s ease;
+}
+.auth-tab + .auth-tab{ border-left:1px solid #1b1d1f; }
+.auth-tab.is-active{ background:#1b1d1f; color:#f6f2e7; }
+
+#loginPanel, #registerPanel{}
+
+.auth-eyebrow{
+  font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.14em;
+  text-transform:uppercase; color:#b96c17; margin:0 0 8px;
+}
+
+.auth-title{
+  font-family:'Oswald', sans-serif; font-weight:600; font-size:32px;
+  letter-spacing:0.01em; margin:0 0 10px; color:#1b1d1f;
+}
+
+.auth-sub{ font-size:14px; color:#5a6068; margin:0 0 32px; line-height:1.5; }
+
+#loginForm label, #registerForm label{
+  display:block; margin-bottom:22px;
+  font-family:'IBM Plex Mono', monospace; font-size:10px; letter-spacing:0.1em;
+  text-transform:uppercase; color:#5a6068;
+}
+
+.auth-field-row{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+
+#loginForm input, #registerForm input{
+  display:block; width:100%; margin-top:8px;
+  border:none; border-bottom:1.5px solid #d8cfb8; background:transparent;
+  padding:8px 2px 10px; font-family:'Inter', sans-serif; font-size:15px;
+  color:#1b1d1f; outline:none; transition:border-color 0.15s ease;
+  text-transform:none; letter-spacing:normal;
+}
+
+#loginForm input::placeholder, #registerForm input::placeholder{ color:#a8a190; }
+#loginForm input:focus, #registerForm input:focus{ border-bottom-color:#e08a2b; }
+
+.auth-submit{
+  width:100%; margin-top:8px; padding:14px 0;
+  background:#e08a2b; color:#1a1200; border:none;
+  font-family:'Oswald', sans-serif; font-weight:600; font-size:14px;
+  letter-spacing:0.06em; text-transform:uppercase; cursor:pointer;
+  transition:background 0.15s ease;
+}
+.auth-submit:hover{ background:#b96c17; color:#fff; }
+.auth-submit:disabled{ opacity:0.6; cursor:default; }
+
+.auth-message{ min-height:18px; font-size:13px; margin-top:16px; color:#b3402f; }
+
+.auth-switch{ margin-top:26px; font-size:13px; color:#5a6068; text-align:center; }
+.auth-switch button{
+  background:none; border:none; padding:0; font:inherit; color:#1b1d1f;
+  text-decoration:underline; text-underline-offset:3px; cursor:pointer;
+}
+
+@media (max-width: 880px){
+  #authScreen{ flex-direction:column; }
+  .auth-blueprint{ min-height:auto; padding:36px 28px; }
+  .auth-instrument{ display:none; }
+  .auth-paper{ min-height:auto; padding:40px 24px 56px; }
+}
+CSSBLOCK
+Output
+
+
+/* ============ BLUEPRINT AUTH SCREEN ============ */
+
+#authScreen{
+  display:flex;
+  min-height:100vh;
+  font-family:'Inter', sans-serif;
+}
+
+.auth-blueprint{
+  position:relative;
+  flex:1 1 46%;
+  background:
+    repeating-linear-gradient(0deg, rgba(151,190,224,0.16) 0 1px, transparent 1px 28px),
+    repeating-linear-gradient(90deg, rgba(151,190,224,0.16) 0 1px, transparent 1px 28px),
+    radial-gradient(circle at 30% 20%, #123c66 0%, #0c3355 55%, #082541 100%);
+  color:#eaf2fb;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  padding:48px 44px;
+  min-height:100vh;
+  overflow:hidden;
+}
+
+.auth-blueprint::after{
+  content:"";
+  position:absolute;
+  inset:18px;
+  border:1px solid #3f6f9c;
+  pointer-events:none;
+}
+
+.auth-mark{ display:flex; align-items:center; gap:14px; }
+
+.auth-mark-badge{
+  width:44px; height:44px;
+  border:1.5px solid #9fc3e6;
+  display:flex; align-items:center; justify-content:center;
+  font-family:'IBM Plex Mono', monospace;
+  font-size:13px; letter-spacing:0.06em;
+  color:#eaf2fb;
+  flex-shrink:0;
+}
+
+.eyebrow-blueprint{
+  font-family:'IBM Plex Mono', monospace;
+  font-size:11px; letter-spacing:0.16em;
+  color:#8fb8dd; text-transform:uppercase; margin-bottom:2px;
+}
+
+.auth-mark-text h1{
+  margin:0; font-family:'Oswald', sans-serif; font-weight:600;
+  font-size:20px; letter-spacing:0.03em; text-transform:uppercase;
+}
+
+.auth-instrument{ align-self:center; width:min(280px, 60%); opacity:0.9; }
+.auth-instrument svg{ width:100%; height:auto; display:block; }
+.auth-instrument .draw{ stroke-dasharray:600; stroke-dashoffset:600; animation:draftIn 1.6s ease-out forwards; }
+@keyframes draftIn{ to{ stroke-dashoffset:0; } }
+@media (prefers-reduced-motion: reduce){ .auth-instrument .draw{ animation:none; stroke-dashoffset:0; } }
+
+.auth-caption{
+  font-family:'Oswald', sans-serif; font-weight:500; font-size:15px;
+  letter-spacing:0.02em; color:#cfe1f2; max-width:34ch; line-height:1.5; margin-top:28px;
+}
+
+.auth-titleblock{ border:1px solid #3f6f9c; font-family:'IBM Plex Mono', monospace; font-size:11px; color:#bcd6ee; }
+.auth-titleblock-row{ display:grid; grid-template-columns:1fr 1fr 1fr; }
+.auth-titleblock-cell{ padding:9px 12px; border-right:1px solid #3f6f9c; }
+.auth-titleblock-cell:last-child{ border-right:none; }
+.auth-titleblock-cell span{ display:block; text-transform:uppercase; letter-spacing:0.1em; color:#6f97bd; font-size:9px; margin-bottom:3px; }
+.auth-titleblock-cell strong{ color:#eaf2fb; font-weight:500; letter-spacing:0.02em; }
+
+.auth-paper{
+  flex:1 1 54%;
+  background:#f6f2e7;
+  display:flex; align-items:center; justify-content:center;
+  padding:48px 24px; min-height:100vh;
+}
+
+.auth-sheet{ width:100%; max-width:420px; }
+
+.auth-tabs{ display:flex; border:1px solid #1b1d1f; margin-bottom:36px; }
+.auth-tab{
+  flex:1; padding:13px 0; text-align:center;
+  font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.14em;
+  text-transform:uppercase; color:#5a6068; background:transparent; border:none;
+  cursor:pointer; transition:background 0.15s ease, color 0.15s ease;
+}
+.auth-tab + .auth-tab{ border-left:1px solid #1b1d1f; }
+.auth-tab.is-active{ background:#1b1d1f; color:#f6f2e7; }
+
+#loginPanel, #registerPanel{}
+
+.auth-eyebrow{
+  font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.14em;
+  text-transform:uppercase; color:#b96c17; margin:0 0 8px;
+}
+
+.auth-title{
+  font-family:'Oswald', sans-serif; font-weight:600; font-size:32px;
+  letter-spacing:0.01em; margin:0 0 10px; color:#1b1d1f;
+}
+
+.auth-sub{ font-size:14px; color:#5a6068; margin:0 0 32px; line-height:1.5; }
+
+#loginForm label, #registerForm label{
+  display:block; margin-bottom:22px;
+  font-family:'IBM Plex Mono', monospace; font-size:10px; letter-spacing:0.1em;
+  text-transform:uppercase; color:#5a6068;
+}
+
+.auth-field-row{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+
+#loginForm input, #registerForm input{
+  display:block; width:100%; margin-top:8px;
+  border:none; border-bottom:1.5px solid #d8cfb8; background:transparent;
+  padding:8px 2px 10px; font-family:'Inter', sans-serif; font-size:15px;
+  color:#1b1d1f; outline:none; transition:border-color 0.15s ease;
+  text-transform:none; letter-spacing:normal;
+}
+
+#loginForm input::placeholder, #registerForm input::placeholder{ color:#a8a190; }
+#loginForm input:focus, #registerForm input:focus{ border-bottom-color:#e08a2b; }
+
+.auth-submit{
+  width:100%; margin-top:8px; padding:14px 0;
+  background:#e08a2b; color:#1a1200; border:none;
+  font-family:'Oswald', sans-serif; font-weight:600; font-size:14px;
+  letter-spacing:0.06em; text-transform:uppercase; cursor:pointer;
+  transition:background 0.15s ease;
+}
+.auth-submit:hover{ background:#b96c17; color:#fff; }
+.auth-submit:disabled{ opacity:0.6; cursor:default; }
+
+.auth-message{ min-height:18px; font-size:13px; margin-top:16px; color:#b3402f; }
+
+.auth-switch{ margin-top:26px; font-size:13px; color:#5a6068; text-align:center; }
+.auth-switch button{
+  background:none; border:none; padding:0; font:inherit; color:#1b1d1f;
+  text-decoration:underline; text-underline-offset:3px; cursor:pointer;
+}
+
+@media (max-width: 880px){
+  #authScreen{ flex-direction:column; }
+  .auth-blueprint{ min-height:auto; padding:36px 28px; }
+  .auth-instrument{ display:none; }
+  .auth-paper{ min-height:auto; padding:40px 24px 56px; }
+}
