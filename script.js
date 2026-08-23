@@ -662,14 +662,25 @@ async function loadProfile() {
     }
 
 
-    if (data) {
+if (data) {
 
-        currentProfile =
-            data;
+    // Backfill full_name if it's missing but we have it in auth metadata
+    if (!data.full_name && currentUser.user_metadata?.full_name) {
 
+        const { data: updated } = await db
+            .from("profiles")
+            .update({ full_name: currentUser.user_metadata.full_name })
+            .eq("id", currentUser.id)
+            .select()
+            .maybeSingle();
+
+        currentProfile = updated || data;
         return;
-
     }
+
+    currentProfile = data;
+    return;
+}
 
 
     await createProfile(
