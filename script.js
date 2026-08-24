@@ -727,9 +727,11 @@ if (data) {
 ========================================================= */
 
 function updateUserInterface() {
+
     const name =
         currentProfile?.full_name ||
-        currentUser?.email?.split("@")[0] ||
+        currentUser?.user_metadata?.full_name ||
+        currentUser?.email ||
         "User";
 
 
