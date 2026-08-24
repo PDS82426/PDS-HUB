@@ -3366,3 +3366,369 @@ if (
     initializePDSHub();
 
 }
+/* =========================================================
+   PDS HUB — PLANNING & DESIGN DEPARTMENT ORDERS
+========================================================= */
+
+const planningDesignOrders = [
+
+    {
+        number: "DO 75",
+        year: "2024",
+
+        title:
+            "Guidelines for the Conduct of Geotechnical Investigation for all DPWH Infrastructure",
+
+        description:
+            "Guidelines for geotechnical investigation for proposed DPWH infrastructure projects and preparation of design documents.",
+
+        category: "geotechnical",
+
+        categoryName: "Geotechnical",
+
+        url:
+            "https://www.dpwh.gov.ph/dpwh/sites/default/files/issuances/do_075_s2024.pdf"
+    },
+
+    {
+        number: "DO 159",
+        year: "2022",
+
+        title:
+            "Implementation of the Social and Environmental Management System Operations Manual",
+
+        description:
+            "Reference for environmental and social considerations during project development and implementation.",
+
+        category: "planning",
+
+        categoryName: "Planning & Project Development",
+
+        url:
+            "https://www.dpwh.gov.ph/dpwh/issuances/department-order/26980"
+    },
+
+    {
+        number: "DO 37",
+        year: "2021",
+
+        title:
+            "Infrastructure Right-of-Way Related Guidelines",
+
+        description:
+            "Reference related to Infrastructure Right-of-Way activities supporting project development.",
+
+        category: "row",
+
+        categoryName: "Right-of-Way",
+
+        url:
+            "https://www.dpwh.gov.ph/"
+    },
+
+    {
+        number: "DO 120",
+        year: "2019",
+
+        title:
+            "Road Network Definition and Inventory Update Manual and Visual Road Condition Assessment Manual",
+
+        description:
+            "Reference for road network information, inventory and visual road condition assessment.",
+
+        category: "roads",
+
+        categoryName: "Roads",
+
+        url:
+            "https://www.dpwh.gov.ph/"
+    },
+
+    {
+        number: "DO 27",
+        year: "2019",
+
+        title:
+            "Manual on Streamflow — 2018 Edition",
+
+        description:
+            "Technical reference for streamflow information used in hydrologic studies and infrastructure planning.",
+
+        category: "hydrology",
+
+        categoryName: "Hydrology & Drainage",
+
+        url:
+            "https://www.dpwh.gov.ph/"
+    },
+
+    {
+        number: "DO 28",
+        year: "2019",
+
+        title:
+            "Cost Estimation Manual for Low Rise Buildings and High Rise Buildings",
+
+        description:
+            "Reference for preparation and evaluation of construction cost estimates for building projects.",
+
+        category: "standards",
+
+        categoryName: "Standards & Manuals",
+
+        url:
+            "https://www.dpwh.gov.ph/"
+    }
+
+];
+
+
+/* =========================================================
+   DISPLAY DEPARTMENT ORDERS
+========================================================= */
+
+function displayDepartmentOrders(orders) {
+
+    const container =
+        document.getElementById("departmentOrdersGrid");
+
+    const count =
+        document.getElementById("ordersResultCount");
+
+    const noResults =
+        document.getElementById("ordersNoResults");
+
+    if (!container) return;
+
+    container.innerHTML = "";
+
+    count.textContent = orders.length;
+
+
+    if (orders.length === 0) {
+
+        noResults.style.display = "block";
+
+        return;
+
+    }
+
+
+    noResults.style.display = "none";
+
+
+    orders.forEach(order => {
+
+        const card =
+            document.createElement("article");
+
+        card.className =
+            "department-order-card";
+
+
+        card.innerHTML = `
+
+            <div class="department-order-top">
+
+                <span class="department-order-number">
+                    ${order.number}
+                </span>
+
+                <span class="department-order-year">
+                    Series of ${order.year}
+                </span>
+
+            </div>
+
+
+            <h3>
+                ${order.title}
+            </h3>
+
+
+            <p>
+                ${order.description}
+            </p>
+
+
+            <span class="department-order-category">
+                ${order.categoryName}
+            </span>
+
+
+            <div class="department-order-footer">
+
+                <span class="department-order-source">
+                    Official DPWH
+                </span>
+
+                <a
+                    class="department-order-link"
+                    href="${order.url}"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                >
+                    View Document ↗
+                </a>
+
+            </div>
+
+        `;
+
+
+        container.appendChild(card);
+
+    });
+
+}
+
+
+/* =========================================================
+   FILTER DEPARTMENT ORDERS
+========================================================= */
+
+function filterDepartmentOrders() {
+
+    const searchElement =
+        document.getElementById("ordersSearch");
+
+    const categoryElement =
+        document.getElementById("ordersCategory");
+
+    const yearElement =
+        document.getElementById("ordersYear");
+
+
+    if (!searchElement) return;
+
+
+    const search =
+        searchElement.value
+            .toLowerCase()
+            .trim();
+
+
+    const category =
+        categoryElement.value;
+
+
+    const year =
+        yearElement.value;
+
+
+    const filtered =
+        planningDesignOrders.filter(order => {
+
+            const text = `
+
+                ${order.number}
+                ${order.year}
+                ${order.title}
+                ${order.description}
+                ${order.categoryName}
+
+            `.toLowerCase();
+
+
+            const matchesSearch =
+                text.includes(search);
+
+
+            const matchesCategory =
+                category === "all" ||
+                order.category === category;
+
+
+            const matchesYear =
+                year === "all" ||
+                order.year === year;
+
+
+            return (
+                matchesSearch &&
+                matchesCategory &&
+                matchesYear
+            );
+
+        });
+
+
+    displayDepartmentOrders(filtered);
+
+
+    const clearButton =
+        document.getElementById(
+            "clearOrdersSearch"
+        );
+
+
+    if (clearButton) {
+
+        clearButton.style.display =
+            search.length
+                ? "block"
+                : "none";
+
+    }
+
+}
+
+
+/* =========================================================
+   CLEAR SEARCH
+========================================================= */
+
+function clearOrdersSearch() {
+
+    const input =
+        document.getElementById("ordersSearch");
+
+    input.value = "";
+
+    filterDepartmentOrders();
+
+    input.focus();
+
+}
+
+
+/* =========================================================
+   RESET
+========================================================= */
+
+function resetDepartmentOrders() {
+
+    document.getElementById(
+        "ordersSearch"
+    ).value = "";
+
+
+    document.getElementById(
+        "ordersCategory"
+    ).value = "all";
+
+
+    document.getElementById(
+        "ordersYear"
+    ).value = "all";
+
+
+    filterDepartmentOrders();
+
+}
+
+
+/* =========================================================
+   INITIALIZE
+========================================================= */
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        displayDepartmentOrders(
+            planningDesignOrders
+        );
+
+    }
+);
