@@ -727,10 +727,9 @@ if (data) {
 ========================================================= */
 
 function updateUserInterface() {
-
     const name =
         currentProfile?.full_name ||
-        currentUser?.email ||
+        currentUser?.email?.split("@")[0] ||
         "User";
 
 
