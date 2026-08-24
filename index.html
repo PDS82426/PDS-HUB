@@ -730,43 +730,258 @@
 
 
             <!-- DEPARTMENT ORDERS -->
+            <!-- =========================================================
+     DEPARTMENT ORDERS
+========================================================= -->
 
-            <section id="orders" class="page">
+<section id="orders" class="page">
 
-                <div class="page-title">
+    <div class="page-title">
 
-                    <div>
+        <div>
 
-                        <div class="eyebrow">
-                            REFERENCE LIBRARY
-                        </div>
+            <div class="eyebrow">
+                PDS REFERENCE LIBRARY
+            </div>
 
-                        <h1>
-                            Department Orders
-                        </h1>
+            <h1>
+                Department Orders
+            </h1>
 
-                        <p>
-                            Latest issuances and official department orders.
-                        </p>
+            <p>
+                Official DPWH issuances relevant to Planning & Design.
+            </p>
 
-                    </div>
+        </div>
 
-                    <button
-                        class="button primary"
-                        onclick="openUploadModal('Department Order')"
-                    >
-                        + Upload document
-                    </button>
+        <a
+            href="https://www.dpwh.gov.ph/dpwh/references/issuances/DO"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="button secondary"
+        >
+            View All DPWH Orders ↗
+        </a>
 
-                </div>
+    </div>
 
 
-                <div
-                    id="ordersDocuments"
-                    class="document-grid"
-                ></div>
+    <!-- INFORMATION BANNER -->
 
-            </section>
+    <div class="orders-info-banner">
+
+        <div class="orders-info-icon">
+            ✓
+        </div>
+
+        <div>
+
+            <strong>
+                Planning & Design Curated Library
+            </strong>
+
+            <p>
+                This section contains Department Orders and related
+                issuances selected for Planning & Design activities,
+                including project development, roads, bridges,
+                geotechnical investigation, hydrology, drainage,
+                right-of-way, survey, and design standards.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <!-- SEARCH AND FILTER -->
+
+    <div class="orders-toolbar">
+
+        <div class="orders-search">
+
+            <span>⌕</span>
+
+            <input
+                id="ordersSearch"
+                type="search"
+                placeholder="Search Department Orders..."
+                autocomplete="off"
+            >
+
+            <button
+                id="clearOrdersSearch"
+                type="button"
+                onclick="clearOrdersSearch()"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+        <select
+            id="ordersCategory"
+            onchange="filterDepartmentOrders()"
+        >
+
+            <option value="all">
+                All Categories
+            </option>
+
+            <option value="planning">
+                Planning & Project Development
+            </option>
+
+            <option value="roads">
+                Roads
+            </option>
+
+            <option value="bridges">
+                Bridges & Structures
+            </option>
+
+            <option value="geotechnical">
+                Geotechnical
+            </option>
+
+            <option value="hydrology">
+                Hydrology & Drainage
+            </option>
+
+            <option value="survey">
+                Survey & Mapping
+            </option>
+
+            <option value="row">
+                Right-of-Way
+            </option>
+
+            <option value="standards">
+                Standards & Manuals
+            </option>
+
+        </select>
+
+
+        <select
+            id="ordersYear"
+            onchange="filterDepartmentOrders()"
+        >
+
+            <option value="all">
+                All Years
+            </option>
+
+            <option value="2026">2026</option>
+            <option value="2025">2025</option>
+            <option value="2024">2024</option>
+            <option value="2023">2023</option>
+            <option value="2022">2022</option>
+            <option value="2021">2021</option>
+            <option value="2020">2020</option>
+            <option value="2019">2019</option>
+            <option value="2018">2018</option>
+            <option value="2017">2017</option>
+            <option value="2016">2016</option>
+            <option value="2015">2015</option>
+
+        </select>
+
+    </div>
+
+
+    <!-- RESULT COUNT -->
+
+    <div class="orders-result-header">
+
+        <div>
+
+            <strong id="ordersResultCount">
+                0
+            </strong>
+
+            <span>
+                Planning & Design issuances
+            </span>
+
+        </div>
+
+        <button
+            type="button"
+            onclick="resetDepartmentOrders()"
+        >
+            Reset filters
+        </button>
+
+    </div>
+
+
+    <!-- ORDER CARDS -->
+
+    <div
+        id="departmentOrdersGrid"
+        class="department-orders-grid"
+    ></div>
+
+
+    <!-- NO RESULTS -->
+
+    <div
+        id="ordersNoResults"
+        class="orders-no-results"
+        style="display:none;"
+    >
+
+        <div>
+            ⌕
+        </div>
+
+        <h3>
+            No Department Orders found
+        </h3>
+
+        <p>
+            Try another keyword, category, or year.
+        </p>
+
+        <button
+            type="button"
+            class="button primary"
+            onclick="resetDepartmentOrders()"
+        >
+            Reset Filters
+        </button>
+
+    </div>
+
+
+    <!-- OFFICIAL SOURCE -->
+
+    <div class="orders-source-note">
+
+        <strong>
+            Official Source
+        </strong>
+
+        <p>
+            The Department Orders listed here are provided as a
+            Planning & Design reference. Always verify the latest
+            issuance, amendment, or superseding order through
+            the official DPWH website.
+        </p>
+
+        <a
+            href="https://www.dpwh.gov.ph/"
+            target="_blank"
+            rel="noopener noreferrer"
+        >
+            Official DPWH Website ↗
+        </a>
+
+    </div>
+
+</section>
+           
 
 
             <!-- STANDARDS -->
