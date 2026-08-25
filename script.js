@@ -13,7 +13,8 @@ const SUPABASE_URL =
 
 const SUPABASE_ANON_KEY =
     "sb_publishable_oJ3Zc3TplfYgePQEmTrJ8Q_qycxR0jQ";
-
+const PDS_ACCESS_API =
+  "https://script.google.com/macros/s/AKfycbwpPtC_YPBG0xpF1s2Qeo2ig1sqnsJhDclWEvV5g1EEpXWjuBEYX4S5NsnzcNgu_UbKvQ/exec";
 
 /* =========================================================
    CREATE SUPABASE CLIENT
@@ -434,7 +435,52 @@ async function loginUser(event) {
 
 
     try {
+const access =
+    await checkPDSAccess(email);
 
+
+if (
+    access.status ===
+    "PENDING"
+) {
+
+    showToast(
+        "Your email is not yet authorized. Please request approval.",
+        "warning"
+    );
+
+    return;
+
+}
+
+
+if (
+    access.status ===
+    "ERROR"
+) {
+
+    showToast(
+        "Unable to verify your PDS access. Please try again.",
+        "error"
+    );
+
+    return;
+
+}
+
+
+if (
+    !access.authorized
+) {
+
+    showToast(
+        "This email is not authorized to access PDS.",
+        "error"
+    );
+
+    return;
+
+}
         const {
             data,
             error
@@ -3732,3 +3778,158 @@ document.addEventListener(
 
     }
 );
+
+async function checkPDSAccess(email) {
+
+    email =
+        String(email || "")
+            .trim()
+            .toLowerCase();
+
+    if (!email) {
+
+        return {
+            authorized: false,
+            status: "INVALID"
+        };
+
+    }
+
+
+    try {
+
+        const response =
+            await fetch(
+                PDS_ACCESS_API +
+                "?action=check&email=" +
+                encodeURIComponent(email)
+            );
+
+
+        const result =
+            await response.json();
+
+
+        return result;
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "PDS access check failed:",
+            error
+        );
+
+
+        return {
+
+            authorized: false,
+
+            status: "ERROR",
+
+            message:
+                "Unable to verify PDS authorization."
+
+        };
+
+    }
+
+}
+async function checkRegistrationAccess(
+    name,
+    email,
+    position
+) {
+
+    email =
+        String(email || "")
+            .trim()
+            .toLowerCase();
+
+
+    const access =
+        await checkPDSAccess(
+            email
+        );
+
+
+    /*
+       Already in directory
+       → registration allowed
+    */
+
+    if (
+        access.authorized
+    ) {
+
+        return {
+
+            allowed: true,
+
+            status: "AUTHORIZED"
+
+        };
+
+    }
+
+
+    /*
+       Not in directory
+       → submit approval request
+    */
+
+    try {
+
+        const response =
+            await fetch(
+                PDS_ACCESS_API +
+                "?action=request" +
+                "&name=" +
+                encodeURIComponent(name) +
+                "&email=" +
+                encodeURIComponent(email) +
+                "&position=" +
+                encodeURIComponent(position)
+            );
+
+
+        const result =
+            await response.json();
+
+
+        return {
+
+            allowed: false,
+
+            status:
+                result.status,
+
+            message:
+                result.message
+
+        };
+
+    }
+
+    catch (error) {
+
+        console.error(
+            error
+        );
+
+
+        return {
+
+            allowed: false,
+
+            status: "ERROR",
+
+            message:
+                "Unable to submit approval request."
+
+        };
+
+    }
+
+}
