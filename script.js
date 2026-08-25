@@ -1036,21 +1036,44 @@ function closeModal() {
 
 }
 
+
 function openProjectModal() {
 
-    modalMode = "project";
+    modalMode =
+        "project";
 
-    const projectFields = document.getElementById("projectFields");
-    const uploadFields = document.getElementById("uploadFields");
+
+    const projectFields =
+        document.getElementById(
+            "projectFields"
+        );
+
+    const uploadFields =
+        document.getElementById(
+            "uploadFields"
+        );
+
 
     if (projectFields) {
-        projectFields.style.display = "block";
+        projectFields.style.display =
+            "block";
     }
+
 
     if (uploadFields) {
-        uploadFields.style.display = "none";
+        uploadFields.style.display =
+            "none";
     }
 
+
+    const projectNameInput =
+        document.getElementById(
+            "projectName"
+        );
+
+    if (projectNameInput) {
+        projectNameInput.required = true;
+    }
     const projectNameInput = document.getElementById("projectName");
     if (projectNameInput) {
         projectNameInput.required = true;
@@ -1063,31 +1086,63 @@ function openProjectModal() {
 
 }
 
-function openUploadModal(category = "General") {
 
-    modalMode = "upload";
+function openUploadModal(
+    category = "General"
+) {
 
-    const projectFields = document.getElementById("projectFields");
-    const uploadFields = document.getElementById("uploadFields");
+    modalMode =
+        "upload";
+
+
+    const projectFields =
+        document.getElementById(
+            "projectFields"
+        );
+
+    const uploadFields =
+        document.getElementById(
+            "uploadFields"
+        );
+
 
     if (projectFields) {
-        projectFields.style.display = "none";
+        projectFields.style.display =
+            "none";
     }
 
-    const projectNameInput = document.getElementById("projectName");
+
+    const projectNameInput =
+        document.getElementById(
+            "projectName"
+        );
+
+    if (projectNameInput) {
+        projectNameInput.required = false;
+    }    const projectNameInput = document.getElementById("projectName");
     if (projectNameInput) {
         projectNameInput.required = false;
     }
 
     if (uploadFields) {
-        uploadFields.style.display = "block";
+        uploadFields.style.display =
+            "block";
     }
 
-    const categoryInput = document.getElementById("documentCategory");
+
+    const categoryInput =
+        document.getElementById(
+            "documentCategory"
+        );
+
 
     if (categoryInput) {
-        categoryInput.value = category;
+
+        categoryInput.value =
+            category;
+
     }
+
 
     openModal(
         "Upload document",
