@@ -1074,7 +1074,10 @@ function openProjectModal() {
     if (projectNameInput) {
         projectNameInput.required = true;
     }
-
+    const projectNameInput = document.getElementById("projectName");
+    if (projectNameInput) {
+        projectNameInput.required = true;
+    }
 
     openModal(
         "New project",
@@ -1116,8 +1119,10 @@ function openUploadModal(
 
     if (projectNameInput) {
         projectNameInput.required = false;
+    }    const projectNameInput = document.getElementById("projectName");
+    if (projectNameInput) {
+        projectNameInput.required = false;
     }
-
 
     if (uploadFields) {
         uploadFields.style.display =
