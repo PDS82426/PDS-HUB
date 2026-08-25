@@ -2046,3 +2046,861 @@ Output
     }
 
 }
+/* =========================================================
+   PDS ENHANCEMENT DESIGN
+   ========================================================= */
+
+:root {
+
+    --pds-navy: #123e30;
+    --pds-green: #1d5b45;
+    --pds-green-light: #e8f0eb;
+    --pds-gold: #b18b45;
+
+}
+
+
+/* =========================================================
+   MANAGEMENT GRID
+   ========================================================= */
+
+.management-grid {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(
+            3,
+            minmax(
+                0,
+                1fr
+            )
+        );
+
+    gap: 14px;
+
+    margin:
+        20px 0 24px;
+
+}
+
+
+.management-card {
+
+    background:
+        var(--surface);
+
+    border:
+        1px solid var(--border);
+
+    border-radius:
+        16px;
+
+    padding:
+        20px;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    gap:
+        15px;
+
+    box-shadow:
+        var(--shadow);
+
+    transition:
+        transform .2s ease,
+        box-shadow .2s ease;
+
+}
+
+
+.management-card:hover {
+
+    transform:
+        translateY(-2px);
+
+    box-shadow:
+        0 12px 35px
+        rgba(
+            23,
+            32,
+            25,
+            .10
+        );
+
+}
+
+
+.management-icon {
+
+    width:
+        46px;
+
+    height:
+        46px;
+
+    flex:
+        0 0 46px;
+
+    border-radius:
+        13px;
+
+    background:
+        var(--green-light);
+
+    color:
+        var(--green);
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    font-weight:
+        800;
+
+    font-size:
+        17px;
+
+}
+
+
+.management-card span {
+
+    display:
+        block;
+
+    color:
+        var(--muted);
+
+    font-size:
+        10px;
+
+    font-weight:
+        700;
+
+    letter-spacing:
+        .08em;
+
+}
+
+
+.management-card strong {
+
+    display:
+        block;
+
+    margin-top:
+        4px;
+
+    font-family:
+        Oswald,
+        sans-serif;
+
+    font-size:
+        28px;
+
+    line-height:
+        1;
+
+}
+
+
+/* =========================================================
+   MANAGEMENT PANEL
+   ========================================================= */
+
+.management-panel {
+
+    background:
+        var(--surface);
+
+    border:
+        1px solid var(--border);
+
+    border-radius:
+        16px;
+
+    padding:
+        22px;
+
+    margin-bottom:
+        20px;
+
+    box-shadow:
+        var(--shadow);
+
+}
+
+
+.management-panel-header {
+
+    display:
+        flex;
+
+    justify-content:
+        space-between;
+
+    align-items:
+        center;
+
+    gap:
+        15px;
+
+    margin-bottom:
+        18px;
+
+}
+
+
+.management-panel-header h2 {
+
+    margin:
+        4px 0 0;
+
+}
+
+
+/* =========================================================
+   MANAGEMENT TABLE
+   ========================================================= */
+
+.management-table-header,
+.management-table-row {
+
+    display:
+        grid;
+
+    grid-template-columns:
+        2fr
+        1.3fr
+        1fr
+        1.2fr;
+
+    gap:
+        16px;
+
+    align-items:
+        center;
+
+}
+
+
+.management-table-header {
+
+    padding:
+        10px 14px;
+
+    background:
+        var(--surface-soft);
+
+    border-radius:
+        9px;
+
+    color:
+        var(--muted);
+
+    font-size:
+        9px;
+
+    font-weight:
+        800;
+
+    letter-spacing:
+        .08em;
+
+}
+
+
+.management-table-row {
+
+    padding:
+        14px;
+
+    border-bottom:
+        1px solid var(--border);
+
+    font-size:
+        12px;
+
+}
+
+
+.management-table-row:last-child {
+
+    border-bottom:
+        0;
+
+}
+
+
+.management-table-row strong {
+
+    display:
+        block;
+
+}
+
+
+.management-table-row small {
+
+    display:
+        block;
+
+    color:
+        var(--muted);
+
+    margin-top:
+        3px;
+
+    font-size:
+        10px;
+
+}
+
+
+.management-status {
+
+    display:
+        inline-flex;
+
+    padding:
+        5px 8px;
+
+    border-radius:
+        20px;
+
+    background:
+        var(--green-light);
+
+    color:
+        var(--green);
+
+    font-size:
+        9px;
+
+    font-weight:
+        700;
+
+}
+
+
+.management-progress {
+
+    height:
+        7px;
+
+    background:
+        #edf0ec;
+
+    border-radius:
+        20px;
+
+    overflow:
+        hidden;
+
+    margin-bottom:
+        4px;
+
+}
+
+
+.management-progress div {
+
+    height:
+        100%;
+
+    background:
+        var(--green);
+
+    border-radius:
+        inherit;
+
+}
+
+
+/* =========================================================
+   ONEDRIVE
+   ========================================================= */
+
+.onedrive-grid {
+
+    display:
+        grid;
+
+    grid-template-columns:
+        repeat(
+            5,
+            minmax(
+                0,
+                1fr
+            )
+        );
+
+    gap:
+        12px;
+
+}
+
+
+.onedrive-card {
+
+    text-decoration:
+        none;
+
+    color:
+        var(--text);
+
+    border:
+        1px solid var(--border);
+
+    border-radius:
+        12px;
+
+    padding:
+        16px;
+
+    background:
+        var(--surface-soft);
+
+    transition:
+        .2s ease;
+
+}
+
+
+.onedrive-card:hover {
+
+    background:
+        var(--green-light);
+
+    border-color:
+        #cbded2;
+
+    transform:
+        translateY(-2px);
+
+}
+
+
+.onedrive-card strong {
+
+    display:
+        block;
+
+    font-size:
+        12px;
+
+}
+
+
+.onedrive-card span {
+
+    display:
+        block;
+
+    margin-top:
+        5px;
+
+    color:
+        var(--muted);
+
+    font-size:
+        10px;
+
+}
+
+
+/* =========================================================
+   UPDATES
+   ========================================================= */
+
+.overview-updates {
+
+    margin:
+        28px 0;
+
+}
+
+
+.updates-list {
+
+    display:
+        flex;
+
+    flex-direction:
+        column;
+
+    gap:
+        10px;
+
+}
+
+
+.update-card {
+
+    display:
+        flex;
+
+    gap:
+        13px;
+
+    padding:
+        15px;
+
+    background:
+        var(--surface);
+
+    border:
+        1px solid var(--border);
+
+    border-radius:
+        13px;
+
+    transition:
+        .2s ease;
+
+}
+
+
+.update-card:hover {
+
+    border-color:
+        #c8d8ce;
+
+    box-shadow:
+        0 8px 22px
+        rgba(
+            23,
+            32,
+            25,
+            .06
+        );
+
+}
+
+
+.update-icon {
+
+    width:
+        42px;
+
+    height:
+        42px;
+
+    flex:
+        0 0 42px;
+
+    border-radius:
+        11px;
+
+    background:
+        var(--green-light);
+
+    color:
+        var(--green);
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    font-size:
+        9px;
+
+    font-weight:
+        800;
+
+}
+
+
+.update-content {
+
+    flex:
+        1;
+
+    min-width:
+        0;
+
+}
+
+
+.update-top {
+
+    display:
+        flex;
+
+    justify-content:
+        space-between;
+
+    align-items:
+        flex-start;
+
+    gap:
+        10px;
+
+}
+
+
+.update-top strong {
+
+    font-size:
+        12px;
+
+}
+
+
+.update-top span {
+
+    color:
+        var(--muted);
+
+    font-size:
+        9px;
+
+    white-space:
+        nowrap;
+
+}
+
+
+.update-content p {
+
+    margin:
+        4px 0;
+
+    color:
+        var(--muted);
+
+    font-size:
+        11px;
+
+    line-height:
+        1.5;
+
+}
+
+
+.update-content small {
+
+    display:
+        inline-block;
+
+    color:
+        var(--green);
+
+    font-size:
+        9px;
+
+    font-weight:
+        700;
+
+}
+
+
+.updates-list.compact {
+
+    display:
+        grid;
+
+    grid-template-columns:
+        repeat(
+            2,
+            minmax(
+                0,
+                1fr
+            )
+        );
+
+    gap:
+        10px;
+
+}
+
+
+/* =========================================================
+   EMPTY STATE
+   ========================================================= */
+
+.management-empty {
+
+    text-align:
+        center;
+
+    padding:
+        35px 20px;
+
+    color:
+        var(--muted);
+
+    font-size:
+        12px;
+
+}
+
+
+.management-empty strong {
+
+    display:
+        block;
+
+    color:
+        var(--text);
+
+    margin-top:
+        8px;
+
+}
+
+
+/* =========================================================
+   QUICK ONEDRIVE CARD
+   ========================================================= */
+
+.quick-link-card {
+
+    text-decoration:
+        none;
+
+    color:
+        inherit;
+
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (
+    max-width: 1100px
+) {
+
+    .management-grid {
+
+        grid-template-columns:
+            repeat(
+                2,
+                minmax(
+                    0,
+                    1fr
+                )
+            );
+
+    }
+
+
+    .onedrive-grid {
+
+        grid-template-columns:
+            repeat(
+                2,
+                minmax(
+                    0,
+                    1fr
+                )
+            );
+
+    }
+
+}
+
+
+@media (
+    max-width: 800px
+) {
+
+    .management-grid {
+
+        grid-template-columns:
+            1fr;
+
+    }
+
+
+    .management-table-header {
+
+        display:
+            none;
+
+    }
+
+
+    .management-table-row {
+
+        grid-template-columns:
+            1fr;
+
+        gap:
+            8px;
+
+        padding:
+            16px 12px;
+
+    }
+
+
+    .management-panel-header {
+
+        align-items:
+            flex-start;
+
+        flex-direction:
+            column;
+
+    }
+
+
+    .updates-list.compact {
+
+        grid-template-columns:
+            1fr;
+
+    }
+
+}
+
+
+@media (
+    max-width: 600px
+) {
+
+    .onedrive-grid {
+
+        grid-template-columns:
+            1fr;
+
+    }
+
+
+    .update-top {
+
+        flex-direction:
+            column;
+
+        gap:
+            4px;
+
+    }
+
+
+    .update-top span {
+
+        white-space:
+            normal;
+
+    }
+
+}
