@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Department Orders | PDS Hub</title>
+
+    <link rel="stylesheet" href="department-orders.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
+</head>
+
+<body>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+
+        <div class="brand">
+            <div class="brand-logo">PDS</div>
+
+            <div class="brand-text">
+                <strong>PDS Hub</strong>
+                <span>Planning & Design Section</span>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+
+            <a href="index.html">
+                <span class="nav-icon">⌂</span>
+                <span>Overview</span>
+            </a>
+
+            <a href="department-orders.html" class="active">
+                <span class="nav-icon">▤</span>
+                <span>Department Orders</span>
+            </a>
+
+            <a href="index.html#standards">
+                <span class="nav-icon">▦</span>
+                <span>Standards & Templates</span>
+            </a>
+
+            <a href="index.html#forms">
+                <span class="nav-icon">□</span>
+                <span>Forms Hub</span>
+            </a>
+
+            <a href="index.html#projects">
+                <span class="nav-icon">◫</span>
+                <span>Project Monitoring</span>
+            </a>
+
+            <a href="index.html#my-projects">
+                <span class="nav-icon">▣</span>
+                <span>My Projects</span>
+            </a>
+
+            <a href="index.html#team">
+                <span class="nav-icon">♙</span>
+                <span>Team Directory</span>
+            </a>
+
+            <a href="index.html#content">
+                <span class="nav-icon">⚙</span>
+                <span>Content Manager</span>
+            </a>
+
+        </nav>
+
+        <div class="sidebar-footer">
+
+            <div class="profile">
+
+                <div class="profile-avatar">
+                    JM
+                </div>
+
+                <div class="profile-info">
+                    <strong>Jamie Mendoza</strong>
+                    <span>Engineer II</span>
+                </div>
+
+                <button class="profile-menu">⋮</button>
+
+            </div>
+
+        </div>
+
+    </aside>
+
+
+    <!-- MAIN -->
+    <main class="main">
+
+        <!-- TOP BAR -->
+        <header class="topbar">
+
+            <button class="mobile-menu" id="mobileMenu">
+                ☰
+            </button>
+
+            <div class="breadcrumb">
+                <a href="index.html">PDS Hub</a>
+                <span>/</span>
+                <strong>Department Orders</strong>
+            </div>
+
+            <div class="top-actions">
+
+                <button class="icon-button" title="Notifications">
+                    🔔
+                </button>
+
+                <div class="top-avatar">
+                    JM
+                </div>
+
+            </div>
+
+        </header>
+
+
+        <!-- PAGE CONTENT -->
+        <section class="page-content">
+
+            <!-- PAGE HEADER -->
+            <div class="page-header">
+
+                <div>
+
+                    <div class="eyebrow">
+                        DPWH ISSUANCES
+                    </div>
+
+                    <h1>
+                        Department Orders
+                    </h1>
+
+                    <p>
+                        Planning & Design reference library
+                    </p>
+
+                </div>
+
+                <a
+                    href="https://www.dpwh.gov.ph/dpwh/references/issuances/DO"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="official-button"
+                >
+                    View All DPWH Orders
+                    <span>↗</span>
+                </a>
+
+            </div>
+
+
+            <!-- INFO BANNER -->
+            <div class="info-banner">
+
+                <div class="info-icon">
+                    ✓
+                </div>
+
+                <div>
+
+                    <strong>
+                        Curated for Planning & Design
+                    </strong>
+
+                    <p>
+                        This library contains Department Orders and related
+                        issuances that are useful for planning, engineering
+                        design, project development, surveys, geotechnical
+                        investigation, roads, bridges, drainage, and
+                        right-of-way activities.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <!-- SEARCH / FILTER -->
+            <div class="filter-panel">
+
+                <div class="search-box">
+
+                    <span class="search-icon">
+                        🔎
+                    </span>
+
+                    <input
+                        type="text"
+                        id="searchInput"
+                        placeholder="Search by DO number, title, keyword..."
+                        autocomplete="off"
+                    >
+
+                    <button
+                        id="clearSearch"
+                        class="clear-search"
+                        title="Clear search"
+                    >
+                        ×
+                    </button>
+
+                </div>
+
+
+                <div class="filters">
+
+                    <select id="categoryFilter">
+
+                        <option value="all">
+                            All Categories
+                        </option>
+
+                        <option value="planning">
+                            Planning & Project Development
+                        </option>
+
+                        <option value="roads">
+                            Roads
+                        </option>
+
+                        <option value="bridges">
+                            Bridges & Structures
+                        </option>
+
+                        <option value="geotechnical">
+                            Geotechnical
+                        </option>
+
+                        <option value="hydrology">
+                            Hydrology & Drainage
+                        </option>
+
+                        <option value="right-of-way">
+                            Right-of-Way
+                        </option>
+
+                        <option value="standards">
+                            Standards & Manuals
+                        </option>
+
+                    </select>
+
+
+                    <select id="yearFilter">
+
+                        <option value="all">
+                            All Years
+                        </option>
+
+                        <option value="2025">
+                            2025
+                        </option>
+
+                        <option value="2024">
+                            2024
+                        </option>
+
+                        <option value="2023">
+                            2023
+                        </option>
+
+                        <option value="2022">
+                            2022
+                        </option>
+
+                        <option value="2021">
+                            2021
+                        </option>
+
+                        <option value="2020">
+                            2020
+                        </option>
+
+                        <option value="2019">
+                            2019
+                        </option>
+
+                        <option value="2018">
+                            2018
+                        </option>
+
+                        <option value="2017">
+                            2017
+                        </option>
+
+                    </select>
+
+                </div>
+
+            </div>
+
+
+            <!-- RESULTS HEADER -->
+            <div class="results-header">
+
+                <div>
+                    <strong id="resultCount">
+                        0
+                    </strong>
+                    <span>
+                        Department Orders
+                    </span>
+                </div>
+
+                <button
+                    id="resetFilters"
+                    class="reset-button"
+                >
+                    Reset Filters
+                </button>
+
+            </div>
+
+
+            <!-- DEPARTMENT ORDERS -->
+            <div
+                id="ordersContainer"
+                class="orders-grid"
+            >
+            </div>
+
+
+            <!-- NO RESULTS -->
+            <div
+                id="noResults"
+                class="no-results hidden"
+            >
+
+                <div class="no-results-icon">
+                    🔎
+                </div>
+
+                <h3>
+                    No Department Orders found
+                </h3>
+
+                <p>
+                    Try another keyword or remove one of the filters.
+                </p>
+
+                <button
+                    id="resetNoResults"
+                    class="primary-button"
+                >
+                    Reset Filters
+                </button>
+
+            </div>
+
+
+            <!-- FOOTER NOTE -->
+            <div class="page-note">
+
+                <strong>Official Source</strong>
+
+                <p>
+                    Department Orders are official issuances of the
+                    Department of Public Works and Highways (DPWH).
+                    Always verify the latest version and amendments
+                    through the official DPWH website.
+                </p>
+
+                <a
+                    href="https://www.dpwh.gov.ph/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                >
+                    Visit Official DPWH Website ↗
+                </a>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <script src="department-orders.js"></script>
+
+</body>
+</html>
