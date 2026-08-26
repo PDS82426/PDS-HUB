@@ -1279,76 +1279,83 @@ async function saveProject() {
 
 
 /* =========================================================
-   UPLOAD DOCUMENT
+   UPLOAD DOCUMENT — FIXED
 ========================================================= */
 
 async function uploadDocument() {
 
     if (!currentUser) {
-
-        alert(
-            "Please sign in first."
-        );
-
+        alert("Please sign in first.");
         return;
-
     }
 
-
     const fileInput =
-        document.getElementById(
-            "documentFile"
-        );
+        document.getElementById("documentFile");
 
+    const titleInput =
+        document.getElementById("documentTitle");
+
+    const categoryInput =
+        document.getElementById("documentCategory");
+
+    const submitButton =
+        document.getElementById("modalSubmitButton");
 
     const file =
         fileInput?.files?.[0];
 
-
     const title =
-        document
-            .getElementById(
-                "documentTitle"
-            )
-            .value
-            .trim();
-
+        titleInput?.value?.trim();
 
     const category =
-        document
-            .getElementById(
-                "documentCategory"
-            )
-            .value;
+        categoryInput?.value || "General";
 
+
+    /* -----------------------------------------------------
+       VALIDATION
+    ----------------------------------------------------- */
 
     if (!file) {
-
-        alert(
-            "Please select a file."
-        );
-
+        alert("Please select a file.");
         return;
-
     }
-
 
     if (!title) {
-
-        alert(
-            "Please enter a document title."
-        );
-
+        alert("Please enter a document title.");
+        titleInput?.focus();
         return;
-
     }
 
 
-    const safeFileName =
-        file.name.replace(
-            /[^a-zA-Z0-9._-]/g,
-            "_"
+    /* -----------------------------------------------------
+       FILE SIZE CHECK
+       50 MB maximum
+    ----------------------------------------------------- */
+
+    const MAX_FILE_SIZE =
+        50 * 1024 * 1024;
+
+    if (file.size > MAX_FILE_SIZE) {
+
+        alert(
+            "File is too large.\n\n" +
+            "Maximum allowed size is 50 MB."
         );
+
+        return;
+    }
+
+
+    /* -----------------------------------------------------
+       SAFE FILE NAME
+    ----------------------------------------------------- */
+
+    const safeFileName =
+        file.name
+            .replace(
+                /[^a-zA-Z0-9._-]/g,
+                "_"
+            );
 
 
     const filePath =
@@ -1359,16 +1366,13 @@ async function uploadDocument() {
         safeFileName;
 
 
-    const submitButton =
-        document.getElementById(
-            "modalSubmitButton"
-        );
-
+    /* -----------------------------------------------------
+       LOCK BUTTON
+    ----------------------------------------------------- */
 
     if (submitButton) {
 
-        submitButton.disabled =
-            true;
+        submitButton.disabled = true;
 
         submitButton.textContent =
             "Uploading...";
@@ -1376,84 +1380,203 @@ async function uploadDocument() {
     }
 
 
-    try {
+    /* -----------------------------------------------------
+       HELPER — TIMEOUT
+    ----------------------------------------------------- */
 
-        /*
-           STEP 1:
-           Upload physical file
-        */
+    function timeoutPromise(
+        promise,
+        milliseconds,
+        message
+    ) {
 
-        const {
-            error: uploadError
-        } = await db
-            .storage
-            .from("documents")
-            .upload(
-                filePath,
-                file,
-                {
+        const timeout =
+            new Promise(
+                (_, reject) => {
 
-                    cacheControl:
-                        "3600",
+                    setTimeout(
+                        () => {
 
-                    upsert:
-                        false,
+                            reject(
+                                new Error(
+                                    message
+                                )
+                            );
 
-                    contentType:
-                        file.type
+                        },
+                        milliseconds
+                    );
 
                 }
             );
 
 
+        return Promise.race([
+            promise,
+            timeout
+        ]);
+
+    }
+
+
+    let uploaded = false;
+
+
+    try {
+
+        console.log(
+            "UPLOAD STARTED"
+        );
+
+        console.log(
+            "User:",
+            currentUser.id
+        );
+
+        console.log(
+            "File:",
+            file.name
+        );
+
+        console.log(
+            "Size:",
+            file.size
+        );
+
+        console.log(
+            "Path:",
+            filePath
+        );
+
+
+        /* -------------------------------------------------
+           STEP 1 — UPLOAD TO SUPABASE STORAGE
+        ------------------------------------------------- */
+
+        console.log(
+            "Uploading to Storage..."
+        );
+
+
+        const {
+            error: uploadError
+        } = await timeoutPromise(
+
+            db
+                .storage
+                .from("documents")
+                .upload(
+                    filePath,
+                    file,
+                    {
+                        cacheControl: "3600",
+                        upsert: false,
+                        contentType:
+                            file.type ||
+                            "application/octet-stream"
+                    }
+                ),
+
+            30000,
+
+            "The Storage upload timed out after 30 seconds.\n\n" +
+            "This usually means the Supabase Storage policy, bucket, " +
+            "network connection, or bucket configuration needs to be checked."
+        );
+
+
         if (uploadError) {
+
+            console.error(
+                "SUPABASE STORAGE ERROR:",
+                uploadError
+            );
 
             throw uploadError;
 
         }
 
 
-        /*
-           STEP 2:
-           Save metadata
-        */
+        uploaded = true;
+
+
+        console.log(
+            "STORAGE UPLOAD SUCCESS"
+        );
+
+
+        /* -------------------------------------------------
+           STEP 2 — SAVE DATABASE RECORD
+        ------------------------------------------------- */
+
+        if (submitButton) {
+
+            submitButton.textContent =
+                "Saving...";
+
+        }
+
+
+        console.log(
+            "Saving document metadata..."
+        );
+
 
         const {
             error: databaseError
-        } = await db
-            .from("documents")
-            .insert({
+        } = await timeoutPromise(
 
-                owner_id:
-                    currentUser.id,
+            db
+                .from("documents")
+                .insert({
 
-                title:
-                    title,
+                    owner_id:
+                        currentUser.id,
 
-                project_name:
-                    category,
+                    title:
+                        title,
 
-                file_name:
-                    file.name,
+                    project_name:
+                        category,
 
-                file_path:
-                    filePath,
+                    file_name:
+                        file.name,
 
-                mime_type:
-                    file.type,
+                    file_path:
+                        filePath,
 
-                size_bytes:
-                    file.size
+                    mime_type:
+                        file.type ||
+                        "application/octet-stream",
 
-            });
+                    size_bytes:
+                        file.size
 
+                }),
 
-        /*
-           If metadata fails,
-           remove physical file.
-        */
+            30000,
+
+            "The file uploaded, but saving the document record timed out.\n\n" +
+            "Please check the Supabase documents table policy."
+        );
+
 
         if (databaseError) {
+
+            console.error(
+                "DOCUMENT DATABASE ERROR:",
+                databaseError
+            );
+
+
+            /* ---------------------------------------------
+               ROLLBACK STORAGE FILE
+            --------------------------------------------- */
+
+            console.log(
+                "Removing uploaded file..."
+            );
+
 
             await db
                 .storage
@@ -1462,10 +1585,23 @@ async function uploadDocument() {
                     filePath
                 ]);
 
+
+            uploaded = false;
+
+
             throw databaseError;
 
         }
 
+
+        console.log(
+            "DATABASE SAVE SUCCESS"
+        );
+
+
+        /* -------------------------------------------------
+           SUCCESS
+        ------------------------------------------------- */
 
         alert(
             "Document uploaded successfully."
@@ -1486,14 +1622,75 @@ async function uploadDocument() {
     } catch (error) {
 
         console.error(
-            "UPLOAD ERROR:",
+            "================================"
+        );
+
+        console.error(
+            "UPLOAD FAILED"
+        );
+
+        console.error(
             error
         );
 
+        console.error(
+            "================================"
+        );
+
+
+        let message =
+            error?.message ||
+            "Unknown upload error.";
+
+
+        /* -------------------------------------------------
+           FRIENDLY SUPABASE ERRORS
+        ------------------------------------------------- */
+
+        if (
+            message
+                .toLowerCase()
+                .includes("row-level security")
+        ) {
+
+            message =
+                "Supabase Row Level Security blocked the upload.\n\n" +
+                "The Storage or documents table policy needs to allow " +
+                "authenticated users to upload.";
+
+        }
+
+
+        else if (
+            message
+                .toLowerCase()
+                .includes("not found")
+        ) {
+
+            message =
+                "The Supabase Storage bucket 'documents' could not be found.\n\n" +
+                "Please check that the bucket exists and is named exactly:\n" +
+                "documents";
+
+        }
+
+
+        else if (
+            message
+                .toLowerCase()
+                .includes("duplicate")
+        ) {
+
+            message =
+                "A file with this path already exists.\n\n" +
+                "Please try uploading again.";
+
+        }
+
 
         alert(
-            "Upload failed:\n\n" +
-            error.message
+            "UPLOAD FAILED\n\n" +
+            message
         );
 
 
