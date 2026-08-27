@@ -1037,34 +1037,115 @@ function closeModal() {
 }
 
 
-function openProjectModal() {
+/* =========================================================
+   MODAL FIELD CONTROL
+========================================================= */
 
-    modalMode =
-        "project";
-
+function setModalFieldState(mode) {
 
     const projectFields =
-        document.getElementById(
-            "projectFields"
-        );
+        document.getElementById("projectFields");
 
     const uploadFields =
-        document.getElementById(
-            "uploadFields"
-        );
+        document.getElementById("uploadFields");
 
-
-    if (projectFields) {
-        projectFields.style.display =
-            "block";
+    if (!projectFields || !uploadFields) {
+        return;
     }
 
 
-    if (uploadFields) {
-        uploadFields.style.display =
-            "none";
+    if (mode === "project") {
+
+        projectFields.style.display = "block";
+        uploadFields.style.display = "none";
+
+
+        projectFields
+            .querySelectorAll("input, select, textarea")
+            .forEach(field => {
+
+                field.disabled = false;
+
+            });
+
+
+        uploadFields
+            .querySelectorAll("input, select, textarea")
+            .forEach(field => {
+
+                field.disabled = true;
+
+            });
+
+
+        const projectName =
+            document.getElementById("projectName");
+
+        if (projectName) {
+            projectName.required = true;
+        }
+
+
+        const documentTitle =
+            document.getElementById("documentTitle");
+
+        if (documentTitle) {
+            documentTitle.required = false;
+        }
+
+    } else {
+
+        projectFields.style.display = "none";
+        uploadFields.style.display = "block";
+
+
+        projectFields
+            .querySelectorAll("input, select, textarea")
+            .forEach(field => {
+
+                field.disabled = true;
+
+            });
+
+
+        uploadFields
+            .querySelectorAll("input, select, textarea")
+            .forEach(field => {
+
+                field.disabled = false;
+
+            });
+
+
+        const projectName =
+            document.getElementById("projectName");
+
+        if (projectName) {
+            projectName.required = false;
+        }
+
+
+        const documentTitle =
+            document.getElementById("documentTitle");
+
+        if (documentTitle) {
+            documentTitle.required = true;
+        }
+
     }
 
+}
+
+
+/* =========================================================
+   OPEN PROJECT MODAL
+========================================================= */
+
+function openProjectModal() {
+
+    modalMode = "project";
+
+    setModalFieldState("project");
 
     openModal(
         "New project",
@@ -1074,35 +1155,17 @@ function openProjectModal() {
 }
 
 
+/* =========================================================
+   OPEN UPLOAD MODAL
+========================================================= */
+
 function openUploadModal(
     category = "General"
 ) {
 
-    modalMode =
-        "upload";
+    modalMode = "upload";
 
-
-    const projectFields =
-        document.getElementById(
-            "projectFields"
-        );
-
-    const uploadFields =
-        document.getElementById(
-            "uploadFields"
-        );
-
-
-    if (projectFields) {
-        projectFields.style.display =
-            "none";
-    }
-
-
-    if (uploadFields) {
-        uploadFields.style.display =
-            "block";
-    }
+    setModalFieldState("upload");
 
 
     const categoryInput =
@@ -1125,7 +1188,6 @@ function openUploadModal(
     );
 
 }
-
 
 /* =========================================================
    SAVE PROJECT
@@ -1715,16 +1777,24 @@ async function uploadDocument() {
    MODAL SUBMIT
 ========================================================= */
 
+/* =========================================================
+   MODAL SUBMIT
+========================================================= */
+
 function setupModalForm() {
 
     const form =
-        document.getElementById(
-            "modalForm"
-        );
+        document.getElementById("modalForm");
 
 
     if (!form) {
+
+        console.error(
+            "MODAL FORM NOT FOUND"
+        );
+
         return;
+
     }
 
 
@@ -1735,14 +1805,19 @@ function setupModalForm() {
             event.preventDefault();
 
 
-            if (
-                modalMode ===
-                "project"
-            ) {
+            console.log(
+                "MODAL SUBMIT:",
+                modalMode
+            );
+
+
+            if (modalMode === "project") {
 
                 await saveProject();
 
-            } else {
+            }
+
+            else if (modalMode === "upload") {
 
                 await uploadDocument();
 
