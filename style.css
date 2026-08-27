@@ -2904,3 +2904,96 @@ Output
     }
 
 }
+/* =========================================================
+   PDS AI ASSISTANT
+========================================================= */
+
+.pds-ai-panel {
+    margin-top: 24px;
+}
+
+.pds-ai-panel .panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+}
+
+.ai-badge {
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-weight: 700;
+    font-size: 14px;
+
+    background: #eef3f8;
+    color: #23415f;
+    border: 1px solid #d7e0e8;
+}
+
+.pds-ai-chat {
+    margin-top: 20px;
+}
+
+.ai-response {
+    min-height: 80px;
+
+    padding: 18px;
+
+    border-radius: 12px;
+
+    background: #f7f9fb;
+    border: 1px solid #e1e7ec;
+
+    color: #25313d;
+    line-height: 1.6;
+
+    white-space: pre-wrap;
+}
+
+.ai-input-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 14px;
+}
+
+.ai-input-row input {
+    flex: 1;
+
+    min-width: 0;
+
+    padding: 13px 15px;
+
+    border: 1px solid #d5dde5;
+    border-radius: 10px;
+
+    font: inherit;
+
+    outline: none;
+}
+
+.ai-input-row input:focus {
+    border-color: #58799a;
+    box-shadow: 0 0 0 3px rgba(88, 121, 154, 0.12);
+}
+
+.ai-input-row button {
+    flex-shrink: 0;
+}
+
+@media (max-width: 600px) {
+
+    .ai-input-row {
+        flex-direction: column;
+    }
+
+    .ai-input-row button {
+        width: 100%;
+    }
+
+}
