@@ -4034,3 +4034,71 @@ async function askPDSAI() {
     console.log(data);
 
 }
+/* =========================================================
+   PDS AI ASSISTANT
+========================================================= */
+
+async function askPDSAI() {
+
+    const input =
+        document.getElementById("aiInput");
+
+    const responseBox =
+        document.getElementById("aiResponse");
+
+    if (!input || !responseBox) {
+        console.error("PDS AI elements not found.");
+        return;
+    }
+
+    const message =
+        input.value.trim();
+
+    if (!message) {
+        return;
+    }
+
+    responseBox.innerHTML =
+        "PDS AI is thinking...";
+
+    try {
+
+        const {
+            data,
+            error
+        } = await db.functions.invoke(
+            "PDS-AI",
+            {
+                body: {
+                    message: message
+                }
+            }
+        );
+
+        if (error) {
+            throw error;
+        }
+
+        responseBox.innerHTML =
+            escapeHTML(
+                data?.answer ||
+                "No response received."
+            );
+
+    } catch (error) {
+
+        console.error(
+            "PDS AI ERROR:",
+            error
+        );
+
+        responseBox.innerHTML =
+            "PDS AI could not respond.<br><br>" +
+            escapeHTML(
+                error.message ||
+                "Unknown error."
+            );
+
+    }
+
+}
