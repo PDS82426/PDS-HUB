@@ -4018,7 +4018,7 @@ async function askPDSAI() {
         data,
         error
     } = await db.functions.invoke(
-        "pds-ai",
+        "PDS-AI",
         {
             body: {
                 message: message
@@ -4063,7 +4063,7 @@ async function askPDSAI() {
             data,
             error
         } = await db.functions.invoke(
-            "pds-ai",
+            "PDS-AI",
             {
                 body: {
                     message: message
