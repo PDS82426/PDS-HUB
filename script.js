@@ -4035,31 +4035,27 @@ async function askPDSAI() {
 
 }
 /* =========================================================
-   PDS AI ASSISTANT
+   PDS AI ASSISTANT — FREE
+   Uses Google Gemini API through Supabase Edge Function
 ========================================================= */
 
 async function askPDSAI() {
 
-    const input =
-        document.getElementById("aiInput");
-
-    const responseBox =
-        document.getElementById("aiResponse");
+    const input = document.getElementById("aiInput");
+    const responseBox = document.getElementById("aiResponse");
 
     if (!input || !responseBox) {
         console.error("PDS AI elements not found.");
         return;
     }
 
-    const message =
-        input.value.trim();
+    const message = input.value.trim();
 
     if (!message) {
         return;
     }
 
-    responseBox.innerHTML =
-        "PDS AI is thinking...";
+    responseBox.innerHTML = "PDS AI is thinking...";
 
     try {
 
@@ -4087,10 +4083,7 @@ async function askPDSAI() {
 
     } catch (error) {
 
-        console.error(
-            "PDS AI ERROR:",
-            error
-        );
+        console.error("PDS AI ERROR:", error);
 
         responseBox.innerHTML =
             "PDS AI could not respond.<br><br>" +
@@ -4098,7 +4091,5 @@ async function askPDSAI() {
                 error.message ||
                 "Unknown error."
             );
-
     }
-
 }
