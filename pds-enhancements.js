@@ -1854,3 +1854,69 @@
     }
 
 })();
+/* =========================================================
+   PDS AI FLOATING CHATBOT
+========================================================= */
+
+function togglePDSAI() {
+
+    const chatbot = document.getElementById("pdsAiChatbot");
+
+    if (!chatbot) return;
+
+    chatbot.classList.toggle("open");
+
+    if (chatbot.classList.contains("open")) {
+
+        setTimeout(() => {
+
+            const input = document.getElementById("aiInput");
+
+            if (input) {
+                input.focus();
+            }
+
+        }, 100);
+
+    }
+}
+
+
+/* ENTER KEY = SEND */
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const input = document.getElementById("aiInput");
+
+    if (!input) return;
+
+    input.addEventListener("keydown", function (event) {
+
+        if (event.key === "Enter") {
+
+            event.preventDefault();
+
+            askPDSAI();
+
+        }
+
+    });
+
+});
+
+
+/* CLOSE WITH ESC */
+
+document.addEventListener("keydown", function (event) {
+
+    if (event.key === "Escape") {
+
+        const chatbot = document.getElementById("pdsAiChatbot");
+
+        if (chatbot) {
+            chatbot.classList.remove("open");
+        }
+
+    }
+
+});
