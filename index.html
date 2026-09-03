@@ -355,69 +355,7 @@
             <!-- OVERVIEW -->
 
             <section id="overview" class="page active-page">
-<!-- =====================================================
-     PDS AI ASSISTANT
-===================================================== -->
 
-<div class="panel pds-ai-panel">
-
-    <div class="panel-header">
-
-        <div>
-            <div class="eyebrow">
-                PDS AI
-            </div>
-
-            <h2>
-                Planning & Design AI Assistant
-            </h2>
-
-            <p>
-                Ask about planning, design, DPWH standards,
-                projects, documents and construction.
-            </p>
-        </div>
-
-        <div class="ai-badge">
-            AI
-        </div>
-
-    </div>
-
-
-    <div class="pds-ai-chat">
-
-        <div
-            id="aiResponse"
-            class="ai-response"
-        >
-            Hello! I'm PDS AI.
-            How can I help you?
-        </div>
-
-
-        <div class="ai-input-row">
-
-            <input
-                type="text"
-                id="aiInput"
-                placeholder="Ask PDS AI..."
-                autocomplete="off"
-            >
-
-            <button
-                type="button"
-                class="button primary"
-                onclick="askPDSAI()"
-            >
-                Send
-            </button>
-
-        </div>
-
-    </div>
-
-</div>
                 <div class="date-label">
                     PDS · WORKSPACE
                 </div>
@@ -1593,7 +1531,83 @@
 
 <!-- PDS ENHANCEMENTS -->
 <script src="pds-enhancements.js"></script>
+<!-- =========================================================
+     FLOATING PDS AI CHATBOT
+========================================================= -->
 
+<button
+    id="pdsAiLauncher"
+    class="pds-ai-launcher"
+    type="button"
+    onclick="togglePDSAI()"
+    aria-label="Open PDS AI"
+>
+    <span class="pds-ai-icon">✦</span>
+    <span class="pds-ai-launcher-text">PDS AI</span>
+</button>
+
+
+<div id="pdsAiChatbot" class="pds-ai-chatbot">
+
+    <div class="pds-ai-chat-header">
+
+        <div class="pds-ai-chat-brand">
+            <div class="pds-ai-mini-logo">PDS</div>
+
+            <div>
+                <strong>PDS AI</strong>
+                <small>Planning & Design Assistant</small>
+            </div>
+        </div>
+
+        <button
+            type="button"
+            class="pds-ai-close"
+            onclick="togglePDSAI()"
+            aria-label="Close PDS AI"
+        >
+            ×
+        </button>
+
+    </div>
+
+
+    <div
+        id="aiResponse"
+        class="pds-ai-messages"
+    >
+        <div class="pds-ai-message ai">
+            <strong>PDS AI</strong>
+            <p>
+                Hello! I'm PDS AI. How can I help you with
+                planning, design, DPWH standards, projects,
+                documents, or construction?
+            </p>
+        </div>
+    </div>
+
+
+    <div class="pds-ai-input-area">
+
+        <input
+            type="text"
+            id="aiInput"
+            placeholder="Ask PDS AI..."
+            autocomplete="off"
+        >
+
+        <button
+            type="button"
+            id="pdsAiSend"
+            onclick="askPDSAI()"
+            aria-label="Send message"
+        >
+            ➤
+        </button>
+
+    </div>
+
+</div>
 </body>
 </html>
 
